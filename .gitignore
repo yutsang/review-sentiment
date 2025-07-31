@@ -43,9 +43,9 @@ ehthumbs.db
 Thumbs.db
 
 # Project Specific
-output/
+#output/
 logs/
-*.xlsx
+#*.xlsx
 *.csv
 *.log
 
