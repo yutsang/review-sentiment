@@ -1,0 +1,15 @@
+{
+  "bank_name": "WeLab_Bank",
+  "total_reviews": 300,
+  "average_rating": 2.14,
+  "original_sentiment": {
+    "neutral": 188,
+    "positive": 64,
+    "negative": 48
+  },
+  "improved_sentiment": {
+    "negative": 161,
+    "neutral": 80,
+    "positive": 59
+  },
+  "rating_adjustments": 

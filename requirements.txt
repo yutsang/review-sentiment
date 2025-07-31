@@ -1,0 +1,9 @@
+# Core dependencies
+requests>=2.31.0
+pandas>=2.1.0
+
+# App Store and Play Store scraping
+google-play-scraper>=3.0.0
+
+# Excel export support
+openpyxl>=3.1.0 

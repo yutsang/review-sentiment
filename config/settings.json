@@ -1,0 +1,46 @@
+{
+  "output": {
+    "formats": ["xlsx"],
+    "encoding": "utf-8",
+    "timestamp_format": "%Y%m%d_%H%M%S",
+    "directory": "output",
+    "combined_filename_template": "{app_key}_combined_{timestamp}"
+  },
+  "rate_limiting": {
+    "app_store": {
+      "between_requests": 1.0,
+      "between_sort_methods": 2.0,
+      "between_countries": 3.0
+    },
+    "play_store": {
+      "between_requests": 2.0,
+      "between_sort_methods": 5.0,
+      "between_countries": 3.0
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "logs/app_scraper.log",
+    "console": true,
+    "max_file_size": "10MB",
+    "backup_count": 5
+  },
+  "excel": {
+    "auto_adjust_columns": true,
+    "max_column_width": 50,
+    "sheet_name": "Reviews"
+  },
+  "duplicate_detection": {
+    "enabled": true,
+    "fields": ["review_id", "content", "author", "date"]
+  },
+  "app_store": {
+    "base_url": "https://itunes.apple.com",
+    "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15"
+  },
+  "play_store": {
+    "batch_size": 200,
+    "languages": ["en"],
+    "default_country": "hk"
+  }
+} 

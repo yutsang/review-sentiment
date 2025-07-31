@@ -1,0 +1,73 @@
+{
+  "bank_name": "ZA_Bank",
+  "total_reviews": 1350,
+  "average_rating": 3.4325925925925924,
+  "rating_distribution": {
+    "5": 691,
+    "1": 411,
+    "4": 100,
+    "2": 76,
+    "3": 72
+  },
+  "sentiment_distribution": {
+    "positive": 685,
+    "negative": 379,
+    "neutral": 286
+  },
+  "category_distribution": {
+    "general": 680,
+    "app_issues": 488,
+    "account_verification": 75,
+    "account_opening": 55,
+    "reward_issues": 52
+  },
+  "rating_adjustments_made": 82,
+  "low_rating_analysis": {
+    "total_reviews": 487,
+    "sentiment_distribution": {
+      "negative": 316,
+      "neutral": 142,
+      "positive": 29
+    },
+    "percentage_negative": 64.8870636550308
+  },
+  "high_rating_analysis": {
+    "total_reviews": 791,
+    "sentiment_distribution": {
+      "positive": 627,
+      "neutral": 123,
+      "negative": 41
+    },
+    "percentage_positive": 79.26675094816687
+  },
+  "top_issues_by_category": [
+    {
+      "category": "reward_issues",
+      "count": 52,
+      "avg_sentiment": 0.36509615384615385,
+      "avg_rating": 4.1923076923076925,
+      "negative_percentage": 15.384615384615385
+    },
+    {
+      "category": "app_issues",
+      "count": 488,
+      "avg_sentiment": 0.014254098360655745,
+      "avg_rating": 2.8258196721311477,
+      "negative_percentage": 43.44262295081967
+    },
+    {
+      "category": "account_verification",
+      "count": 75,
+      "avg_sentiment": -0.3904666666666667,
+      "avg_rating": 1.8933333333333333,
+      "negative_percentage": 65.33333333333333
+    },
+    {
+      "category": "account_opening",
+      "count": 55,
+      "avg_sentiment": 0.01907272727272728,
+      "avg_rating": 2.727272727272727,
+      "negative_percentage": 38.18181818181819
+    }
+  ]
+}

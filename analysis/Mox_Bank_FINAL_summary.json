@@ -1,0 +1,73 @@
+{
+  "bank_name": "Mox_Bank",
+  "total_reviews": 1278,
+  "average_rating": 3.1987480438184663,
+  "rating_distribution": {
+    "5": 555,
+    "1": 449,
+    "4": 119,
+    "3": 78,
+    "2": 77
+  },
+  "sentiment_distribution": {
+    "positive": 574,
+    "negative": 394,
+    "neutral": 310
+  },
+  "category_distribution": {
+    "general": 627,
+    "app_issues": 499,
+    "account_opening": 67,
+    "reward_issues": 44,
+    "account_verification": 41
+  },
+  "rating_adjustments_made": 77,
+  "low_rating_analysis": {
+    "total_reviews": 526,
+    "sentiment_distribution": {
+      "negative": 328,
+      "neutral": 166,
+      "positive": 32
+    },
+    "percentage_negative": 62.3574144486692
+  },
+  "high_rating_analysis": {
+    "total_reviews": 674,
+    "sentiment_distribution": {
+      "positive": 522,
+      "neutral": 112,
+      "negative": 40
+    },
+    "percentage_positive": 77.44807121661721
+  },
+  "top_issues_by_category": [
+    {
+      "category": "app_issues",
+      "count": 499,
+      "avg_sentiment": 0.03697394789579158,
+      "avg_rating": 2.9198396793587174,
+      "negative_percentage": 39.278557114228455
+    },
+    {
+      "category": "account_verification",
+      "count": 41,
+      "avg_sentiment": -0.2891951219512195,
+      "avg_rating": 1.8048780487804879,
+      "negative_percentage": 63.41463414634146
+    },
+    {
+      "category": "reward_issues",
+      "count": 44,
+      "avg_sentiment": -0.12672727272727272,
+      "avg_rating": 2.5,
+      "negative_percentage": 43.18181818181818
+    },
+    {
+      "category": "account_opening",
+      "count": 67,
+      "avg_sentiment": -0.03201492537313432,
+      "avg_rating": 2.701492537313433,
+      "negative_percentage": 46.26865671641791
+    }
+  ]
+}

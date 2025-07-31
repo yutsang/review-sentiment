@@ -1,0 +1,134 @@
+{
+  "bank_name": "WeLab_Bank",
+  "total_reviews": 300,
+  "average_rating": 2.14,
+  "rating_distribution": {
+    "1": 192,
+    "5": 65,
+    "2": 16,
+    "3": 15,
+    "4": 12
+  },
+  "sentiment_distribution": {
+    "neutral": 188,
+    "positive": 64,
+    "negative": 48
+  },
+  "category_distribution": {
+    "app_issues": 117,
+    "account_verification": 79,
+    "general": 69,
+    "account_opening": 19,
+    "reward_issues": 16
+  },
+  "top_positive_words": [
+    [
+      "easy",
+      32
+    ],
+    [
+      "good",
+      23
+    ],
+    [
+      "great",
+      13
+    ],
+    [
+      "love",
+      9
+    ],
+    [
+      "convenient",
+      7
+    ],
+    [
+      "smooth",
+      4
+    ],
+    [
+      "fast",
+      4
+    ],
+    [
+      "awesome",
+      3
+    ],
+    [
+      "secure",
+      2
+    ],
+    [
+      "satisfied",
+      1
+    ]
+  ],
+  "top_negative_words": [
+    [
+      "bad",
+      15
+    ],
+    [
+      "error",
+      10
+    ],
+    [
+      "problem",
+      7
+    ],
+    [
+      "issue",
+      5
+    ],
+    [
+      "difficult",
+      5
+    ],
+    [
+      "crash",
+      4
+    ],
+    [
+      "worst",
+      4
+    ],
+    [
+      "slow",
+      4
+    ],
+    [
+      "annoying",
+      4
+    ],
+    [
+      "useless",
+      4
+    ]
+  ],
+  "most_common_issues": [
+    {
+      "category": "app_issues",
+      "count": 117,
+      "avg_sentiment": 0.08,
+      "avg_rating": 2.34
+    },
+    {
+      "category": "account_verification",
+      "count": 79,
+      "avg_sentiment": -0.075,
+      "avg_rating": 1.25
+    },
+    {
+      "category": "reward_issues",
+      "count": 16,
+      "avg_sentiment": 0.049,
+      "avg_rating": 4.19
+    },
+    {
+      "category": "account_opening",
+      "count": 19,
+      "avg_sentiment": -0.031,
+      "avg_rating": 1.26
+    }
+  ]
+}

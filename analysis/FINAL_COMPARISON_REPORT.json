@@ -1,0 +1,221 @@
+[
+  {
+    "bank_name": "WeLab_Bank",
+    "total_reviews": 300,
+    "average_rating": 2.14,
+    "rating_distribution": {
+      "1": 192,
+      "5": 65,
+      "2": 16,
+      "3": 15,
+      "4": 12
+    },
+    "sentiment_distribution": {
+      "negative": 161,
+      "neutral": 80,
+      "positive": 59
+    },
+    "category_distribution": {
+      "app_issues": 120,
+      "account_verification": 80,
+      "general": 65,
+      "account_opening": 19,
+      "reward_issues": 16
+    },
+    "rating_adjustments_made": 30,
+    "low_rating_analysis": {
+      "total_reviews": 208,
+      "sentiment_distribution": {
+        "negative": 148,
+        "neutral": 54,
+        "positive": 6
+      },
+      "percentage_negative": 71.15384615384616
+    },
+    "high_rating_analysis": {
+      "total_reviews": 77,
+      "sentiment_distribution": {
+        "positive": 52,
+        "neutral": 18,
+        "negative": 7
+      },
+      "percentage_positive": 67.53246753246754
+    },
+    "top_issues_by_category": [
+      {
+        "category": "app_issues",
+        "count": 120,
+        "avg_sentiment": -0.08181666666666666,
+        "avg_rating": 2.325,
+        "negative_percentage": 53.333333333333336
+      },
+      {
+        "category": "account_verification",
+        "count": 80,
+        "avg_sentiment": -0.4139125,
+        "avg_rating": 1.25,
+        "negative_percentage": 66.25
+      },
+      {
+        "category": "reward_issues",
+        "count": 16,
+        "avg_sentiment": 0.03424999999999999,
+        "avg_rating": 4.1875,
+        "negative_percentage": 18.75
+      },
+      {
+        "category": "account_opening",
+        "count": 19,
+        "avg_sentiment": -0.300578947368421,
+        "avg_rating": 1.263157894736842,
+        "negative_percentage": 68.42105263157895
+      }
+    ]
+  },
+  {
+    "bank_name": "ZA_Bank",
+    "total_reviews": 1350,
+    "average_rating": 3.4325925925925924,
+    "rating_distribution": {
+      "5": 691,
+      "1": 411,
+      "4": 100,
+      "2": 76,
+      "3": 72
+    },
+    "sentiment_distribution": {
+      "positive": 685,
+      "negative": 379,
+      "neutral": 286
+    },
+    "category_distribution": {
+      "general": 680,
+      "app_issues": 488,
+      "account_verification": 75,
+      "account_opening": 55,
+      "reward_issues": 52
+    },
+    "rating_adjustments_made": 82,
+    "low_rating_analysis": {
+      "total_reviews": 487,
+      "sentiment_distribution": {
+        "negative": 316,
+        "neutral": 142,
+        "positive": 29
+      },
+      "percentage_negative": 64.8870636550308
+    },
+    "high_rating_analysis": {
+      "total_reviews": 791,
+      "sentiment_distribution": {
+        "positive": 627,
+        "neutral": 123,
+        "negative": 41
+      },
+      "percentage_positive": 79.26675094816687
+    },
+    "top_issues_by_category": [
+      {
+        "category": "reward_issues",
+        "count": 52,
+        "avg_sentiment": 0.36509615384615385,
+        "avg_rating": 4.1923076923076925,
+        "negative_percentage": 15.384615384615385
+      },
+      {
+        "category": "app_issues",
+        "count": 488,
+        "avg_sentiment": 0.014254098360655745,
+        "avg_rating": 2.8258196721311477,
+        "negative_percentage": 43.44262295081967
+      },
+      {
+        "category": "account_verification",
+        "count": 75,
+        "avg_sentiment": -0.3904666666666667,
+        "avg_rating": 1.8933333333333333,
+        "negative_percentage": 65.33333333333333
+      },
+      {
+        "category": "account_opening",
+        "count": 55,
+        "avg_sentiment": 0.01907272727272728,
+        "avg_rating": 2.727272727272727,
+        "negative_percentage": 38.18181818181819
+      }
+    ]
+  },
+  {
+    "bank_name": "Mox_Bank",
+    "total_reviews": 1278,
+    "average_rating": 3.1987480438184663,
+    "rating_distribution": {
+      "5": 555,
+      "1": 449,
+      "4": 119,
+      "3": 78,
+      "2": 77
+    },
+    "sentiment_distribution": {
+      "positive": 574,
+      "negative": 394,
+      "neutral": 310
+    },
+    "category_distribution": {
+      "general": 627,
+      "app_issues": 499,
+      "account_opening": 67,
+      "reward_issues": 44,
+      "account_verification": 41
+    },
+    "rating_adjustments_made": 77,
+    "low_rating_analysis": {
+      "total_reviews": 526,
+      "sentiment_distribution": {
+        "negative": 328,
+        "neutral": 166,
+        "positive": 32
+      },
+      "percentage_negative": 62.3574144486692
+    },
+    "high_rating_analysis": {
+      "total_reviews": 674,
+      "sentiment_distribution": {
+        "positive": 522,
+        "neutral": 112,
+        "negative": 40
+      },
+      "percentage_positive": 77.44807121661721
+    },
+    "top_issues_by_category": [
+      {
+        "category": "app_issues",
+        "count": 499,
+        "avg_sentiment": 0.03697394789579158,
+        "avg_rating": 2.9198396793587174,
+        "negative_percentage": 39.278557114228455
+      },
+      {
+        "category": "account_verification",
+        "count": 41,
+        "avg_sentiment": -0.2891951219512195,
+        "avg_rating": 1.8048780487804879,
+        "negative_percentage": 63.41463414634146
+      },
+      {
+        "category": "reward_issues",
+        "count": 44,
+        "avg_sentiment": -0.12672727272727272,
+        "avg_rating": 2.5,
+        "negative_percentage": 43.18181818181818
+      },
+      {
+        "category": "account_opening",
+        "count": 67,
+        "avg_sentiment": -0.03201492537313432,
+        "avg_rating": 2.701492537313433,
+        "negative_percentage": 46.26865671641791
+      }
+    ]
+  }
+]
