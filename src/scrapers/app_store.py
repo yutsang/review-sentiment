@@ -99,28 +99,42 @@ class AppStoreScraper(BaseScraper):
         rss_urls = [
             f"{self.base_url}/rss/customerreviews/page={page}/id={self.app_id}/sortby={sort_by}/xml",
             f"{self.base_url}/{country}/rss/customerreviews/page={page}/id={self.app_id}/sortby={sort_by}/xml",
-            f"{self.base_url}/rss/customerreviews/id={self.app_id}/page={page}/sortby={sort_by}/xml"
+            f"{self.base_url}/rss/customerreviews/id={self.app_id}/page={page}/sortby={sort_by}/xml",
+            f"{self.base_url}/us/rss/customerreviews/page={page}/id={self.app_id}/sortby={sort_by}/xml"
         ]
         
         for rss_url in rss_urls:
             try:
+                self.logger.debug(f"Trying RSS URL: {rss_url}")
                 response = self.session.get(rss_url, timeout=30)
                 
-                if response.status_code == 200 and len(response.content) > 500:
+                if response.status_code == 200:
                     root = ET.fromstring(response.content)
-                    entries = root.findall('.//{http://www.w3.org/2005/Atom}entry')[1:]  # Skip app info
+                    entries = root.findall('.//{http://www.w3.org/2005/Atom}entry')
                     
-                    if entries:
-                        for entry in entries:
+                    self.logger.debug(f"Found {len(entries)} total entries in RSS feed")
+                    
+                    # Skip the first entry which is usually app information
+                    review_entries = entries[1:] if len(entries) > 1 else []
+                    
+                    if review_entries:
+                        for entry in review_entries:
                             review = Review.from_app_store_entry(entry, "App Store")
                             if review:
                                 reviews.append(review)
                         
-                        self.logger.debug(f"RSS success: {rss_url} - {len(entries)} entries")
+                        self.logger.debug(f"RSS success: {rss_url} - {len(review_entries)} review entries")
                         break
+                    else:
+                        self.logger.debug(f"RSS feed has no review entries: {rss_url}")
+                else:
+                    self.logger.debug(f"RSS URL returned status {response.status_code}: {rss_url}")
                 
             except Exception as e:
                 self.logger.debug(f"RSS URL failed: {rss_url} - {e}")
                 continue
+        
+        if not reviews:
+            self.logger.warning(f"No reviews found for app ID {self.app_id} on page {page} with sort {sort_by}")
         
         return reviews 

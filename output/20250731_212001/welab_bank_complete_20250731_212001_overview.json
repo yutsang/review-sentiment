@@ -1,0 +1,26 @@
+{
+  "analysis_timestamp": "20250731_212001",
+  "total_banks_analyzed": 1,
+  "total_reviews_collected": 185,
+  "weighted_average_rating": 2.16,
+  "banks": {
+    "welab_bank": {
+      "bank_name": "WeLab Bank",
+      "app_store_reviews": 0,
+      "play_store_reviews": 185,
+      "total_reviews": 185,
+      "average_rating": 2.1621621621621623,
+      "rating_distribution": {
+        "2": 14,
+        "1": 116,
+        "4": 7,
+        "5": 42,
+        "3": 6
+      }
+    }
+  },
+  "platform_totals": {
+    "app_store_total": 0,
+    "play_store_total": 185
+  }
+}

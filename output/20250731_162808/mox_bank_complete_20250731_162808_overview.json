@@ -1,0 +1,26 @@
+{
+  "analysis_timestamp": "20250731_162808",
+  "total_banks_analyzed": 1,
+  "total_reviews_collected": 756,
+  "weighted_average_rating": 3.53,
+  "banks": {
+    "mox_bank": {
+      "bank_name": "Mox Bank",
+      "app_store_reviews": 0,
+      "play_store_reviews": 756,
+      "total_reviews": 756,
+      "average_rating": 3.5251322751322753,
+      "rating_distribution": {
+        "4": 78,
+        "1": 197,
+        "5": 380,
+        "3": 54,
+        "2": 47
+      }
+    }
+  },
+  "platform_totals": {
+    "app_store_total": 0,
+    "play_store_total": 756
+  }
+}

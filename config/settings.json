@@ -4,7 +4,23 @@
     "encoding": "utf-8",
     "timestamp_format": "%Y%m%d_%H%M%S",
     "directory": "output",
-    "combined_filename_template": "{app_key}_combined_{timestamp}"
+    "combined_filename_template": "{app_key}_reviews_{timestamp}",
+    "use_timestamp_subfolder": true
+  },
+  "colors": {
+    "chart_palette": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"],
+    "sentiment_colors": {
+      "positive": "#2ca02c",
+      "negative": "#d62728", 
+      "neutral": "#1f77b4"
+    },
+    "rating_colors": {
+      "5": "#2ca02c",
+      "4": "#8cc665",
+      "3": "#ffc107",
+      "2": "#fd7e14",
+      "1": "#d62728"
+    }
   },
   "rate_limiting": {
     "app_store": {
@@ -42,5 +58,19 @@
     "batch_size": 200,
     "languages": ["en"],
     "default_country": "hk"
+  },
+  "translation": {
+    "service": "googletrans",
+    "target_language": "en",
+    "max_retries": 3,
+    "delay": 1,
+    "chunk_size": 4000
+  },
+  "analysis": {
+    "enable_sentiment": true,
+    "enable_categorization": true,
+    "enable_summary": true,
+    "enable_wordcloud": true,
+    "enable_charts": true
   }
 } 

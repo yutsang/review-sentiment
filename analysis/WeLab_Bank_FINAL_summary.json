@@ -1,73 +1,111 @@
 {
   "bank_name": "WeLab_Bank",
-  "total_reviews": 300,
-  "average_rating": 2.14,
-  "rating_distribution": {
-    "1": 192,
-    "5": 65,
-    "2": 16,
-    "3": 15,
-    "4": 12
-  },
+  "analysis_date": "2025-07-31T15:47:42.986471",
+  "total_reviews": 485,
+  "average_sentiment_polarity": 0.04925083951939621,
   "sentiment_distribution": {
-    "negative": 161,
-    "neutral": 80,
-    "positive": 59
+    "positive": 118,
+    "negative": 65,
+    "neutral": 302
   },
   "category_distribution": {
-    "app_issues": 120,
-    "account_verification": 80,
-    "general": 65,
-    "account_opening": 19,
-    "reward_issues": 16
+    "general": 288,
+    "app_performance": 50,
+    "user_interface": 41,
+    "payment_transfer": 31,
+    "login_auth": 31,
+    "features": 29,
+    "customer_service": 11,
+    "security": 4
   },
-  "rating_adjustments_made": 30,
-  "low_rating_analysis": {
-    "total_reviews": 208,
-    "sentiment_distribution": {
-      "negative": 148,
-      "neutral": 54,
-      "positive": 6
-    },
-    "percentage_negative": 71.15384615384616
-  },
-  "high_rating_analysis": {
-    "total_reviews": 77,
-    "sentiment_distribution": {
-      "positive": 52,
-      "neutral": 18,
-      "negative": 7
-    },
-    "percentage_positive": 67.53246753246754
-  },
-  "top_issues_by_category": [
+  "top_positive_phrases": [
     {
-      "category": "app_issues",
-      "count": 120,
-      "avg_sentiment": -0.08181666666666666,
-      "avg_rating": 2.325,
-      "negative_percentage": 53.333333333333336
+      "phrase": "easy use",
+      "count": 11
     },
     {
-      "category": "account_verification",
-      "count": 80,
-      "avg_sentiment": -0.4139125,
-      "avg_rating": 1.25,
-      "negative_percentage": 66.25
+      "phrase": "user friendly",
+      "count": 6
     },
     {
-      "category": "reward_issues",
-      "count": 16,
-      "avg_sentiment": 0.03424999999999999,
-      "avg_rating": 4.1875,
-      "negative_percentage": 18.75
+      "phrase": "many times",
+      "count": 4
     },
     {
-      "category": "account_opening",
-      "count": 19,
-      "avg_sentiment": -0.300578947368421,
-      "avg_rating": 1.263157894736842,
-      "negative_percentage": 68.42105263157895
+      "phrase": "account opening",
+      "count": 3
+    },
+    {
+      "phrase": "tried many",
+      "count": 2
+    },
+    {
+      "phrase": "tried many times",
+      "count": 2
+    },
+    {
+      "phrase": "another virtual",
+      "count": 2
+    },
+    {
+      "phrase": "debit card",
+      "count": 2
+    },
+    {
+      "phrase": "account stuck",
+      "count": 2
+    },
+    {
+      "phrase": "card looks",
+      "count": 2
     }
-  ]
+  ],
+  "top_negative_phrases": [
+    {
+      "phrase": "customer service",
+      "count": 4
+    },
+    {
+      "phrase": "id card",
+      "count": 4
+    },
+    {
+      "phrase": "get past",
+      "count": 3
+    },
+    {
+      "phrase": "call customer",
+      "count": 2
+    },
+    {
+      "phrase": "call customer service",
+      "count": 2
+    },
+    {
+      "phrase": "bad experience",
+      "count": 2
+    },
+    {
+      "phrase": "even get",
+      "count": 2
+    },
+    {
+      "phrase": "open account",
+      "count": 2
+    },
+    {
+      "phrase": "verify identity",
+      "count": 2
+    },
+    {
+      "phrase": "hkid invalid",
+      "count": 2
+    }
+  ],
+  "key_insights": {
+    "most_common_positive_theme": "easy use",
+    "most_common_negative_theme": "customer service",
+    "primary_issue_category": "general",
+    "sentiment_ratio": 1.8153846153846154
+  }
 }

@@ -1,0 +1,109 @@
+{
+  "apps": {
+    "welab_bank": {
+      "name": "WeLab Bank",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1493956050",
+        "countries": ["hk"],
+        "sort_methods": ["mostRecent", "mostHelpful"]
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "welab.bank",
+        "countries": ["hk"],
+        "sort_methods": ["NEWEST", "RATING"]
+      }
+    },
+    "za_bank": {
+      "name": "ZA Bank",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1477150600",
+        "countries": ["hk", "us"],
+        "sort_methods": ["mostRecent", "mostHelpful"]
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.zhongan.ibank",
+        "countries": ["hk"],
+        "sort_methods": ["NEWEST", "RATING"]
+      }
+    },
+    "mox_bank": {
+      "name": "Mox Bank",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1505743481",
+        "countries": ["hk"],
+        "sort_methods": ["mostRecent", "mostHelpful"]
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.mox.app",
+        "countries": ["hk"],
+        "sort_methods": ["NEWEST", "RATING"]
+      }
+    },
+    "hang_seng": {
+      "name": "Hang Seng Bank",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1039256353",
+        "countries": ["hk"],
+        "sort_methods": ["mostRecent", "mostHelpful"]
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.hangseng.rbmobile",
+        "countries": ["hk"],
+        "sort_methods": ["NEWEST", "RATING"]
+      }
+    },
+    "hsbc_hk": {
+      "name": "HSBC Hong Kong",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1113718008",
+        "countries": ["hk"],
+        "sort_methods": ["mostRecent", "mostHelpful"]
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "hk.com.hsbc.hsbchkmobilebanking",
+        "countries": ["hk"],
+        "sort_methods": ["NEWEST", "RATING"]
+      }
+    },
+    "standard_chartered": {
+      "name": "Standard Chartered Hong Kong",
+      "app_store": {
+        "enabled": true,
+        "app_id": "445795688",
+        "countries": ["hk"],
+        "sort_methods": ["mostRecent", "mostHelpful"]
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.scb.breezebanking.hk",
+        "countries": ["hk"],
+        "sort_methods": ["NEWEST", "RATING"]
+      }
+    },
+    "boc_hk": {
+      "name": "Bank of China Hong Kong",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1534534188",
+        "countries": ["hk"],
+        "sort_methods": ["mostRecent", "mostHelpful"]
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.bochk.app.aos",
+        "countries": ["hk"],
+        "sort_methods": ["NEWEST", "RATING"]
+      }
+    }
+  }
+} 

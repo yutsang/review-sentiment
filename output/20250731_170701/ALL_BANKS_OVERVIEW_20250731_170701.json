@@ -1,0 +1,125 @@
+{
+  "timestamp": "20250731_170701",
+  "total_banks": 7,
+  "banks": {
+    "welab_bank": {
+      "name": "WeLab Bank",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1434351155",
+        "reviews_count": 0,
+        "average_rating": 0
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "welab.bank",
+        "reviews_count": 185,
+        "average_rating": 2.16
+      },
+      "total_reviews": 185,
+      "weighted_rating": 2.16
+    },
+    "za_bank": {
+      "name": "ZA Bank",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1477150600",
+        "reviews_count": 417,
+        "average_rating": 3.34
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.zhongan.ibank",
+        "reviews_count": 933,
+        "average_rating": 3.47
+      },
+      "total_reviews": 1350,
+      "weighted_rating": 3.43
+    },
+    "mox_bank": {
+      "name": "Mox Bank",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1475772754",
+        "reviews_count": 0,
+        "average_rating": 0
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.mox.app",
+        "reviews_count": 756,
+        "average_rating": 3.53
+      },
+      "total_reviews": 756,
+      "weighted_rating": 3.53
+    },
+    "hang_seng": {
+      "name": "Hang Seng Bank",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1039256353",
+        "reviews_count": 759,
+        "average_rating": 1.39
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.hangseng.rbmobile",
+        "reviews_count": 1025,
+        "average_rating": 1.95
+      },
+      "total_reviews": 1784,
+      "weighted_rating": 1.71
+    },
+    "hsbc_hk": {
+      "name": "HSBC Hong Kong",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1113718008",
+        "reviews_count": 0,
+        "average_rating": 0
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "hk.com.hsbc.hsbchkmobilebanking",
+        "reviews_count": 1628,
+        "average_rating": 3.4
+      },
+      "total_reviews": 1628,
+      "weighted_rating": 3.4
+    },
+    "standard_chartered": {
+      "name": "Standard Chartered Hong Kong",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1083533647",
+        "reviews_count": 0,
+        "average_rating": 0
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.scb.breezebanking.hk",
+        "reviews_count": 947,
+        "average_rating": 1.99
+      },
+      "total_reviews": 947,
+      "weighted_rating": 1.99
+    },
+    "boc_hk": {
+      "name": "Bank of China Hong Kong",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1534534188",
+        "reviews_count": 728,
+        "average_rating": 2.32
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.bochk.app.aos",
+        "reviews_count": 579,
+        "average_rating": 2.3
+      },
+      "total_reviews": 1307,
+      "weighted_rating": 2.31
+    }
+  }
+}
