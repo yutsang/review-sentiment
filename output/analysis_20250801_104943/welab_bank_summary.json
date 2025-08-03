@@ -1,0 +1,59 @@
+{
+  "app_key": "welab_bank",
+  "generated_at": "2025-08-01T10:50:11.577995",
+  "total_reviews": 485,
+  "sentiment_distribution": {
+    "neutral": 292,
+    "positive": 120,
+    "negative": 73
+  },
+  "rating_distribution": {
+    "1": 308,
+    "2": 30,
+    "3": 21,
+    "4": 19,
+    "5": 107
+  },
+  "category_distribution": {
+    "general": 303,
+    "payment": 53,
+    "performance": 37,
+    "login_auth": 32,
+    "ui_ux": 30,
+    "feature": 27,
+    "customer_service": 2,
+    "security": 1
+  },
+  "average_rating": 2.1484536082474226,
+  "average_sentiment_score": 0.04956070989342974,
+  "platform_distribution": {
+    "App Store": 300,
+    "Play Store": 185
+  },
+  "top_positive_words": {
+    "": 404,
+    "good": 35,
+    "like": 23,
+    "great": 16,
+    "love": 12,
+    "amazing": 3,
+    "awesome": 3,
+    "excellent": 3,
+    "perfect": 1
+  },
+  "top_negative_words": {
+    "": 453,
+    "bad": 10,
+    "worst": 8,
+    "useless": 5,
+    "fail": 4,
+    "terrible": 3,
+    "horrible": 3,
+    "disappointing": 3,
+    "awful": 1,
+    "hate": 1
+  },
+  "recommendations": [
+    "Low average rating. Urgent attention needed for app improvements."
+  ]
+}

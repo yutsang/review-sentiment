@@ -1,0 +1,54 @@
+{
+  "app_key": "mox_bank",
+  "generated_at": "2025-08-03T22:27:42.183116",
+  "total_reviews": 1278,
+  "overall_sentiment_distribution": {
+    "negative": 643,
+    "positive": 531,
+    "neutral": 104
+  },
+  "rating_distribution": {
+    "1": 450,
+    "2": 77,
+    "3": 77,
+    "4": 119,
+    "5": 555
+  },
+  "problem_category_distribution": {
+    "General": 841,
+    "App Operating Issues": 365,
+    "Account Verification Issues": 28,
+    "Account Opening Issues": 28,
+    "Rewards Issues": 16
+  },
+  "average_rating": 3.1971830985915495,
+  "average_sentiment_score": 0.4737089201877934,
+  "platform_distribution": {
+    "Play Store": 757,
+    "App Store": 521
+  },
+  "top_positive_words": {
+    "": 633,
+    "good": 103,
+    "easy": 86,
+    "great": 67,
+    "best": 34,
+    "far": 32,
+    "nice": 30,
+    "love": 27,
+    "new": 26,
+    "very good": 25
+  },
+  "top_negative_words": {
+    "": 996,
+    "other": 37,
+    "unable": 17,
+    "down": 15,
+    "dark": 14,
+    "few": 14,
+    "poor": 13,
+    "worst": 13,
+    "hard": 12,
+    "bad": 10
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "app_key": "ant_bank",
+  "generated_at": "2025-08-01T10:50:19.694922",
+  "total_reviews": 48,
+  "sentiment_distribution": {
+    "neutral": 37,
+    "positive": 10,
+    "negative": 1
+  },
+  "rating_distribution": {
+    "1": 36,
+    "2": 2,
+    "3": 4,
+    "4": 1,
+    "5": 5
+  },
+  "category_distribution": {
+    "general": 35,
+    "payment": 5,
+    "performance": 3,
+    "login_auth": 2,
+    "feature": 2,
+    "ui_ux": 1
+  },
+  "average_rating": 1.6875,
+  "average_sentiment_score": 0.07756102693602694,
+  "platform_distribution": {
+    "App Store": 48
+  },
+  "top_positive_words": {
+    "": 47,
+    "like": 1
+  },
+  "top_negative_words": {
+    "": 48
+  },
+  "recommendations": [
+    "Low average rating. Urgent attention needed for app improvements."
+  ]
+}

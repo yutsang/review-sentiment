@@ -49,6 +49,14 @@ logs/
 *.csv
 *.log
 
+# API Keys and Sensitive Data
+config/settings_local.json
+config/settings_production.json
+*.key
+*.pem
+.env.local
+.env.production
+
 # Temporary files
 *.tmp
 *.temp 

@@ -1,0 +1,60 @@
+{
+  "app_key": "mox_bank",
+  "generated_at": "2025-08-01T10:46:31.917701",
+  "total_reviews": 1278,
+  "sentiment_distribution": {
+    "neutral": 570,
+    "positive": 552,
+    "negative": 156
+  },
+  "rating_distribution": {
+    "1": 450,
+    "2": 77,
+    "3": 77,
+    "4": 119,
+    "5": 555
+  },
+  "category_distribution": {
+    "general": 789,
+    "payment": 154,
+    "feature": 116,
+    "ui_ux": 76,
+    "performance": 57,
+    "login_auth": 55,
+    "customer_service": 27,
+    "security": 4
+  },
+  "average_rating": 3.1971830985915495,
+  "average_sentiment_score": 0.17406301441811614,
+  "platform_distribution": {
+    "Play Store": 757,
+    "App Store": 521
+  },
+  "top_positive_words": {
+    "": 976,
+    "good": 141,
+    "great": 83,
+    "like": 52,
+    "love": 30,
+    "excellent": 27,
+    "amazing": 9,
+    "awesome": 8,
+    "perfect": 4,
+    "fantastic": 3
+  },
+  "top_negative_words": {
+    "": 1219,
+    "bad": 27,
+    "worst": 21,
+    "terrible": 11,
+    "useless": 3,
+    "horrible": 3,
+    "broken": 3,
+    "disappointing": 3,
+    "fail": 2,
+    "awful": 1
+  },
+  "recommendations": [
+    "Below-average rating. Focus on user satisfaction improvements."
+  ]
+}

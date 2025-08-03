@@ -64,7 +64,6 @@ class PlayStoreScraper(BaseScraper):
         all_reviews = []
         countries = self.play_store_config.get("countries", [self.default_country])
         sort_methods = self._get_sort_methods()
-        max_reviews_per_sort = self.play_store_config.get("max_reviews_per_sort", 1000)
         
         for country in countries:
             self.logger.info(f"Scraping country: {country}")
@@ -74,7 +73,7 @@ class PlayStoreScraper(BaseScraper):
                 
                 try:
                     sort_reviews = self._scrape_sort_method(
-                        country, sort_method, max_reviews_per_sort
+                        country, sort_method
                     )
                     
                     new_reviews = 0
@@ -110,13 +109,14 @@ class PlayStoreScraper(BaseScraper):
         
         return sort_methods
     
-    def _scrape_sort_method(self, country: str, sort_method, max_reviews: int) -> List[Review]:
+    def _scrape_sort_method(self, country: str, sort_method) -> List[Review]:
         """Scrape reviews for a specific sort method"""
         reviews = []
         continuation_token = None
         total_fetched = 0
         
-        while total_fetched < max_reviews:
+        # Remove max_reviews limit - get all available reviews
+        while True:
             try:
                 if continuation_token:
                     result, continuation_token = gp_reviews(

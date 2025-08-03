@@ -1,5 +1,80 @@
 {
   "apps": {
+    "pao_bank": {
+      "name": "PAO Bank",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1505282324",
+        "countries": ["hk"],
+        "sort_methods": ["mostRecent", "mostHelpful"]
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.paobank.mobilebank.personal",
+        "countries": ["hk"],
+        "sort_methods": ["NEWEST", "RATING"]
+      }
+    },
+    "ant_bank": {
+      "name": "Ant Bank",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1494094567",
+        "countries": ["hk"],
+        "sort_methods": ["mostRecent", "mostHelpful"]
+      },
+      "play_store": {
+        "enabled": false,
+        "package_name": "com.hk.ios.phone.portal",
+        "countries": ["hk"],
+        "sort_methods": ["NEWEST", "RATING"]
+      }
+    },
+    "airstar_bank": {
+      "name": "Airstar Bank",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1488056130",
+        "countries": ["hk"],
+        "sort_methods": ["mostRecent", "mostHelpful"]
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.airstarbank.mobilebanking",
+        "countries": ["hk"],
+        "sort_methods": ["NEWEST", "RATING"]
+      }
+    },
+    "fusion_bank": {
+      "name": "Fusion Bank",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1484615237",
+        "countries": ["hk"],
+        "sort_methods": ["mostRecent", "mostHelpful"]
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.fusionbank.vb",
+        "countries": ["hk"],
+        "sort_methods": ["NEWEST", "RATING"]
+      }
+    },
+    "livi_bank": {
+      "name": "livi Bank",
+      "app_store": {
+        "enabled": true,
+        "app_id": "1481532757",
+        "countries": ["hk"],
+        "sort_methods": ["mostRecent", "mostHelpful"]
+      },
+      "play_store": {
+        "enabled": true,
+        "package_name": "com.livibank.hk",
+        "countries": ["hk"],
+        "sort_methods": ["NEWEST", "RATING"]
+      }
+    },
     "welab_bank": {
       "name": "WeLab Bank",
       "app_store": {
@@ -41,66 +116,6 @@
       "play_store": {
         "enabled": true,
         "package_name": "com.mox.app",
-        "countries": ["hk"],
-        "sort_methods": ["NEWEST", "RATING"]
-      }
-    },
-    "hang_seng": {
-      "name": "Hang Seng Bank",
-      "app_store": {
-        "enabled": true,
-        "app_id": "1039256353",
-        "countries": ["hk"],
-        "sort_methods": ["mostRecent", "mostHelpful"]
-      },
-      "play_store": {
-        "enabled": true,
-        "package_name": "com.hangseng.rbmobile",
-        "countries": ["hk"],
-        "sort_methods": ["NEWEST", "RATING"]
-      }
-    },
-    "hsbc_hk": {
-      "name": "HSBC Hong Kong",
-      "app_store": {
-        "enabled": true,
-        "app_id": "1113718008",
-        "countries": ["hk"],
-        "sort_methods": ["mostRecent", "mostHelpful"]
-      },
-      "play_store": {
-        "enabled": true,
-        "package_name": "hk.com.hsbc.hsbchkmobilebanking",
-        "countries": ["hk"],
-        "sort_methods": ["NEWEST", "RATING"]
-      }
-    },
-    "standard_chartered": {
-      "name": "Standard Chartered Hong Kong",
-      "app_store": {
-        "enabled": true,
-        "app_id": "445795688",
-        "countries": ["hk"],
-        "sort_methods": ["mostRecent", "mostHelpful"]
-      },
-      "play_store": {
-        "enabled": true,
-        "package_name": "com.scb.breezebanking.hk",
-        "countries": ["hk"],
-        "sort_methods": ["NEWEST", "RATING"]
-      }
-    },
-    "boc_hk": {
-      "name": "Bank of China Hong Kong",
-      "app_store": {
-        "enabled": true,
-        "app_id": "1534534188",
-        "countries": ["hk"],
-        "sort_methods": ["mostRecent", "mostHelpful"]
-      },
-      "play_store": {
-        "enabled": true,
-        "package_name": "com.bochk.app.aos",
         "countries": ["hk"],
         "sort_methods": ["NEWEST", "RATING"]
       }

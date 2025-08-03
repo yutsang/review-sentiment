@@ -15,12 +15,15 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from textblob import TextBlob
-from googletrans import Translator
 import matplotlib.pyplot as plt
 import seaborn as sns
 from wordcloud import WordCloud
 from collections import Counter
 import textwrap
+import requests
+import re
+from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from src.utils.config import (
     load_config, load_app_config, get_app_config,
@@ -31,11 +34,34 @@ from src.scrapers import AppStoreScraper, PlayStoreScraper
 from src.exporters import CSVExporter, XLSXExporter
 from src.models import Review
 
-# Initialize translator for improved translation
-translator = Translator()
+# Initialize translator for improved translation (disabled for now)
+translator = None
 
 def safe_translate(text: str, config: Dict, max_retries: int = None, delay: float = None) -> str:
-    """Safely translate text with improved retry logic and rate limiting"""
+    """Safely translate text with fallback handling"""
+    # Handle NaN, None, or non-string values
+    if pd.isna(text) or text is None:
+        return ""
+    
+    # Convert to string if it's not already
+    if not isinstance(text, str):
+        text = str(text)
+    
+    if not text or not text.strip():
+        return text
+    
+    translation_config = config.get('translation', {})
+    service = translation_config.get('service', 'none')
+    
+    # If translation is disabled, return original text
+    if service == 'none':
+        return text
+    
+    # Use DeepSeek for translation
+    if service == 'deepseek':
+        return translate_with_deepseek(text, config)
+    
+    # Use original googletrans logic for other services
     if pd.isna(text) or text == "" or text is None:
         return ""
     
@@ -118,75 +144,307 @@ def categorize_review(review_text: str, title_text: str = "") -> str:
     
     return 'general'
 
+def categorize_problem_simple(review_text: str) -> str:
+    """Categorize review into one of 5 specific problem categories"""
+    if not review_text:
+        return "General"
+    
+    text = review_text.lower()
+    
+    # Account Opening Issues
+    if any(word in text for word in ['open account', 'account opening', 'registration', 'sign up', 'signup', 'register']):
+        return "Account Opening Issues"
+    
+    # Account Verification Issues
+    if any(word in text for word in ['verify', 'verification', 'kyc', 'identity', 'document', 'proof']):
+        return "Account Verification Issues"
+    
+    # App Operating Issues
+    if any(word in text for word in ['app', 'login', 'crash', 'error', 'bug', 'slow', 'freeze', 'technical', 'system']):
+        return "App Operating Issues"
+    
+    # Rewards Issues
+    if any(word in text for word in ['reward', 'bonus', 'cashback', 'points', 'promotion', 'offer']):
+        return "Rewards Issues"
+    
+    # Default to General
+    return "General"
+
 def create_overview_json(results: Dict[str, Dict], config: Dict) -> Dict[str, Any]:
-    """Create comprehensive overview JSON with exact numbers and ratings"""
+    """Create comprehensive overview JSON with exact review numbers, ratings, and sentiment analysis"""
     overview = {
         "generated_at": datetime.now().isoformat(),
-        "total_banks": len(results),
-        "banks": {},
+        "total_apps": len(results),
         "summary": {
-            "total_reviews_all_banks": 0,
+            "total_reviews_all_apps": 0,
             "total_app_store_reviews": 0,
             "total_play_store_reviews": 0,
-            "average_rating_across_banks": 0.0
-        }
+            "average_rating_across_apps": 0.0,
+            "average_sentiment_across_apps": 0.0
+        },
+        "apps": {}
     }
     
+    total_reviews_all = 0
+    total_app_store_all = 0
+    total_play_store_all = 0
     total_weighted_rating = 0
-    total_reviews = 0
+    total_sentiment_score = 0
+    apps_with_sentiment = 0
     
-    for bank_key, bank_data in results.items():
-        app_config = get_app_config(bank_key)
-        bank_name = app_config.get("name", bank_key) if app_config else bank_key
+    for app_key, app_data in results.items():
+        app_config = get_app_config(app_key)
+        app_name = app_config.get('name', app_key)
         
-        app_store_reviews = bank_data.get("app_store", [])
-        play_store_reviews = bank_data.get("play_store", [])
+        app_store_reviews = app_data.get('app_store', [])
+        play_store_reviews = app_data.get('play_store', [])
         
-        app_store_count = len(app_store_reviews)
-        play_store_count = len(play_store_reviews)
-        total_bank_reviews = app_store_count + play_store_count
+        app_store_rating = 0
+        play_store_rating = 0
+        app_store_sentiment = 0
+        play_store_sentiment = 0
         
-        # Calculate average ratings
-        app_store_ratings = [r.rating for r in app_store_reviews if hasattr(r, 'rating') and r.rating]
-        play_store_ratings = [r.rating for r in play_store_reviews if hasattr(r, 'rating') and r.rating]
+        if app_store_reviews:
+            app_store_rating = sum(r.rating for r in app_store_reviews) / len(app_store_reviews)
+            # Calculate sentiment if available
+            sentiment_scores = [getattr(r, 'sentiment_score', 0) for r in app_store_reviews if hasattr(r, 'sentiment_score')]
+            if sentiment_scores:
+                app_store_sentiment = sum(sentiment_scores) / len(sentiment_scores)
         
-        app_store_avg = np.mean(app_store_ratings) if app_store_ratings else 0
-        play_store_avg = np.mean(play_store_ratings) if play_store_ratings else 0
+        if play_store_reviews:
+            play_store_rating = sum(r.rating for r in play_store_reviews) / len(play_store_reviews)
+            # Calculate sentiment if available
+            sentiment_scores = [getattr(r, 'sentiment_score', 0) for r in play_store_reviews if hasattr(r, 'sentiment_score')]
+            if sentiment_scores:
+                play_store_sentiment = sum(sentiment_scores) / len(sentiment_scores)
         
-        # Weighted average rating
-        if total_bank_reviews > 0:
-            weighted_avg = (app_store_avg * app_store_count + play_store_avg * play_store_count) / total_bank_reviews
-        else:
-            weighted_avg = 0
+        # Calculate weighted rating and sentiment
+        total_reviews = len(app_store_reviews) + len(play_store_reviews)
+        weighted_rating = 0
+        weighted_sentiment = 0
         
-        overview["banks"][bank_key] = {
-            "name": bank_name,
-            "total_reviews": total_bank_reviews,
+        if total_reviews > 0:
+            weighted_rating = ((len(app_store_reviews) * app_store_rating) + 
+                             (len(play_store_reviews) * play_store_rating)) / total_reviews
+            weighted_sentiment = ((len(app_store_reviews) * app_store_sentiment) + 
+                                (len(play_store_reviews) * play_store_sentiment)) / total_reviews
+        
+        # Update summary totals
+        total_reviews_all += total_reviews
+        total_app_store_all += len(app_store_reviews)
+        total_play_store_all += len(play_store_reviews)
+        total_weighted_rating += weighted_rating * total_reviews
+        if weighted_sentiment > 0:
+            total_sentiment_score += weighted_sentiment * total_reviews
+            apps_with_sentiment += 1
+        
+        overview["apps"][app_key] = {
+            "name": app_name,
             "app_store": {
-                "review_count": app_store_count,
-                "average_rating": round(app_store_avg, 2)
+                "reviews_count": len(app_store_reviews),
+                "average_rating": round(app_store_rating, 2),
+                "average_sentiment": round(app_store_sentiment, 3)
             },
             "play_store": {
-                "review_count": play_store_count,
-                "average_rating": round(play_store_avg, 2)
+                "reviews_count": len(play_store_reviews),
+                "average_rating": round(play_store_rating, 2),
+                "average_sentiment": round(play_store_sentiment, 3)
             },
-            "weighted_rating": round(weighted_avg, 2)
+            "total_reviews": total_reviews,
+            "weighted_rating": round(weighted_rating, 2),
+            "weighted_sentiment": round(weighted_sentiment, 3),
+            "sentiment_category": "positive" if weighted_sentiment > 0.6 else "negative" if weighted_sentiment < 0.4 else "neutral"
         }
-        
-        # Update summary
-        overview["summary"]["total_reviews_all_banks"] += total_bank_reviews
-        overview["summary"]["total_app_store_reviews"] += app_store_count
-        overview["summary"]["total_play_store_reviews"] += play_store_count
-        
-        if total_bank_reviews > 0:
-            total_weighted_rating += weighted_avg * total_bank_reviews
-            total_reviews += total_bank_reviews
     
-    # Calculate overall average
-    if total_reviews > 0:
-        overview["summary"]["average_rating_across_banks"] = round(total_weighted_rating / total_reviews, 2)
+    # Calculate overall averages
+    if total_reviews_all > 0:
+        overview["summary"]["total_reviews_all_apps"] = total_reviews_all
+        overview["summary"]["total_app_store_reviews"] = total_app_store_all
+        overview["summary"]["total_play_store_reviews"] = total_play_store_all
+        overview["summary"]["average_rating_across_apps"] = round(total_weighted_rating / total_reviews_all, 2)
+        if apps_with_sentiment > 0:
+            overview["summary"]["average_sentiment_across_apps"] = round(total_sentiment_score / total_reviews_all, 3)
     
     return overview
+
+def call_deepseek_api(text: str, config: Dict) -> Optional[str]:
+    """Call DeepSeek API to get AI-processed keywords for wordcloud"""
+    try:
+        deepseek_config = config.get('deepseek', {})
+        
+        if not deepseek_config.get('enabled', False):
+            return None
+            
+        api_key = deepseek_config.get('api_key')
+        if not api_key or api_key == "YOUR_DEEPSEEK_API_KEY_HERE":
+            print("⚠️ DeepSeek API key not configured. Skipping AI wordcloud processing.")
+            return None
+            
+        base_url = deepseek_config.get('base_url', 'https://api.deepseek.com/v1')
+        model = deepseek_config.get('model', 'deepseek-chat')
+        max_tokens = deepseek_config.get('max_tokens', 1000)
+        temperature = deepseek_config.get('temperature', 0.3)
+        prompt_template = deepseek_config.get('wordcloud_prompt', '')
+        
+        # Truncate text if too long (keep first 5000 characters)
+        truncated_text = text[:5000] + "..." if len(text) > 5000 else text
+        
+        # Format prompt
+        prompt = prompt_template.format(reviews=truncated_text)
+        
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        data = {
+            'model': model,
+            'messages': [
+                {
+                    'role': 'user',
+                    'content': prompt
+                }
+            ],
+            'max_tokens': max_tokens,
+            'temperature': temperature
+        }
+        
+        response = requests.post(
+            f"{base_url}/chat/completions",
+            headers=headers,
+            json=data,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            content = result['choices'][0]['message']['content']
+            # Clean up the response - extract only phrases, preserve spaces between words
+            # Remove extra punctuation but keep spaces for multi-word phrases
+            phrases = re.sub(r'[^\w\s]', ' ', content).strip()
+            # Remove extra whitespace
+            phrases = ' '.join(phrases.split())
+            return phrases
+        else:
+            print(f"⚠️ DeepSeek API error: {response.status_code} - {response.text}")
+            return None
+            
+    except Exception as e:
+        print(f"⚠️ DeepSeek API call failed: {e}")
+        return None
+
+def analyze_sentiment_deepseek(text: str, config: Dict) -> Dict[str, Any]:
+    """Analyze sentiment using DeepSeek API"""
+    try:
+        deepseek_config = config.get('deepseek', {})
+        
+        if not deepseek_config.get('enabled', False):
+            # Fallback to TextBlob if DeepSeek is disabled
+            return analyze_sentiment(text)
+            
+        api_key = deepseek_config.get('api_key')
+        if not api_key or api_key == "YOUR_DEEPSEEK_API_KEY_HERE":
+            return analyze_sentiment(text)
+            
+        base_url = deepseek_config.get('base_url', 'https://api.deepseek.com/v1')
+        model = deepseek_config.get('model', 'deepseek-chat')
+        max_tokens = deepseek_config.get('max_tokens', 1000)
+        temperature = deepseek_config.get('temperature', 0.3)
+        sentiment_prompt = deepseek_config.get('sentiment_prompt', 'Analyze the sentiment of the following text. Return only a JSON object with "sentiment" (positive/negative/neutral), "score" (0.0 to 1.0), and "confidence" (0.0 to 1.0). Text: {text}')
+        
+        # Format the prompt
+        formatted_prompt = sentiment_prompt.format(review=text)
+        
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        data = {
+            'model': model,
+            'messages': [
+                {'role': 'user', 'content': formatted_prompt}
+            ],
+            'max_tokens': max_tokens,
+            'temperature': temperature
+        }
+        
+        response = requests.post(f'{base_url}/chat/completions', headers=headers, json=data, timeout=30)
+        
+        if response.status_code == 200:
+            result = response.json()
+            content = result['choices'][0]['message']['content']
+            
+            # Try to parse JSON response
+            try:
+                import json
+                sentiment_data = json.loads(content)
+                return {
+                    'sentiment_score': sentiment_data.get('score', 0.5),
+                    'sentiment_category': sentiment_data.get('sentiment', 'neutral'),
+                    'confidence': sentiment_data.get('confidence', 0.5)
+                }
+            except json.JSONDecodeError:
+                # Fallback to TextBlob if JSON parsing fails
+                return analyze_sentiment(text)
+        else:
+            print(f"⚠️ DeepSeek API error: {response.status_code}")
+            return analyze_sentiment(text)
+            
+    except Exception as e:
+        print(f"⚠️ DeepSeek sentiment analysis failed: {e}")
+        return analyze_sentiment(text)
+
+def translate_with_deepseek(text: str, config: Dict) -> str:
+    """Translate text using DeepSeek API"""
+    try:
+        if not text or not text.strip():
+            return text
+            
+        deepseek_config = config.get('deepseek', {})
+        
+        if not deepseek_config.get('enabled', False):
+            return text
+            
+        api_key = deepseek_config.get('api_key')
+        if not api_key or api_key == "YOUR_DEEPSEEK_API_KEY_HERE":
+            return text
+            
+        base_url = deepseek_config.get('base_url', 'https://api.deepseek.com/v1')
+        model = deepseek_config.get('model', 'deepseek-chat')
+        max_tokens = deepseek_config.get('max_tokens', 1000)
+        temperature = deepseek_config.get('temperature', 0.3)
+        
+        # Translation prompt
+        translation_prompt = f"Translate the following text to English. Keep the original meaning and tone. Return only the translated text, no explanations. Text: {text}"
+        
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        data = {
+            'model': model,
+            'messages': [
+                {'role': 'user', 'content': translation_prompt}
+            ],
+            'max_tokens': max_tokens,
+            'temperature': temperature
+        }
+        
+        response = requests.post(f'{base_url}/chat/completions', headers=headers, json=data, timeout=30)
+        
+        if response.status_code == 200:
+            result = response.json()
+            translated_text = result['choices'][0]['message']['content'].strip()
+            return translated_text
+        else:
+            print(f"⚠️ DeepSeek translation error: {response.status_code}")
+            return text
+            
+    except Exception as e:
+        print(f"⚠️ DeepSeek translation failed: {e}")
+        return text
 
 
 class AppReviewScraper:
@@ -206,7 +464,7 @@ class AppReviewScraper:
         # Initialize exporters
         self.csv_exporter = CSVExporter(self.config)
         self.xlsx_exporter = XLSXExporter(self.config)
-        
+    
         # Setup matplotlib for Chinese font support
         plt.rcParams['font.sans-serif'] = ['Arial', 'DejaVu Sans', 'Liberation Sans', 'Bitstream Vera Sans', 'sans-serif']
         plt.rcParams['axes.unicode_minus'] = False
@@ -216,7 +474,7 @@ class AppReviewScraper:
         app_name = app_config.get("name", app_config.get("app_key"))
         self.logger.info(f"🚀 Starting review scraping for: {app_name}")
         
-        platforms = ["app_store", "play_store"]
+            platforms = ["app_store", "play_store"]
         
         results = {}
         
@@ -277,19 +535,10 @@ class AppReviewScraper:
     
     def export_results(self, app_key: str, results: Dict[str, List[Review]], 
                       timestamp_subfolder: str = None) -> str:
-        """Export scraping results with timestamp subfolder structure"""
-        timestamp = datetime.now().strftime(
-            self.config.get("output", {}).get("timestamp_format", "%Y%m%d_%H%M%S")
-        )
-        
-        # Create timestamp subfolder if enabled
+        """Export scraping results to output folder"""
+        # Create output directory
         output_dir = self.config.get("output", {}).get("directory", "output")
-        if self.config.get("output", {}).get("use_timestamp_subfolder", False):
-            if timestamp_subfolder:
-                output_dir = os.path.join(output_dir, timestamp_subfolder)
-            else:
-                output_dir = os.path.join(output_dir, timestamp)
-            os.makedirs(output_dir, exist_ok=True)
+        os.makedirs(output_dir, exist_ok=True)
         
         # Combine all reviews
         all_reviews = []
@@ -300,12 +549,10 @@ class AppReviewScraper:
             self.logger.warning("No reviews to export")
             return ""
         
-        # Generate filename
-        template = self.config.get("output", {}).get("combined_filename_template",
-                                                     "{app_key}_reviews_{timestamp}")
-        filename = template.format(app_key=app_key, timestamp=timestamp)
+        # Generate filename for review files
+        filename = f"{app_key}_reviews"
         
-        # Export as XLSX to the subfolder
+        # Export as XLSX to the output directory
         xlsx_file = self.xlsx_exporter.export(all_reviews, filename, output_dir)
         return xlsx_file if xlsx_file else ""
     
@@ -330,8 +577,19 @@ class AppReviewScraper:
     
     def run_comprehensive_analysis(self, file_path: str, app_key: str, 
                                  timestamp_subfolder: str = None) -> str:
-        """Run comprehensive sentiment analysis with improved translation"""
-        print(f"\n🔬 Starting comprehensive analysis for {app_key}...")
+        """Run simplified analysis with tqdm progress bars"""
+        print(f"\n🔬 Starting simplified analysis for {app_key}...")
+        
+        # Use provided timestamp or create new one
+        if timestamp_subfolder:
+            timestamp = timestamp_subfolder
+        else:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # Create analysis subfolder
+        base_output_dir = self.config.get("output", {}).get("directory", "output")
+        analysis_dir = os.path.join(base_output_dir, f"analysis_{timestamp}")
+        os.makedirs(analysis_dir, exist_ok=True)
         
         # Read the data
         df = pd.read_excel(file_path)
@@ -339,61 +597,62 @@ class AppReviewScraper:
         
         # Initialize new columns for analysis
         df['translated_content'] = ""
-        df['translated_title'] = ""
-        df['category'] = ""
         df['sentiment_score'] = 0.0
-        df['sentiment_category'] = ""
-        df['sentiment_words'] = ""
         df['positive_words'] = ""
         df['negative_words'] = ""
+        df['problem_category'] = ""
+        df['overall_sentiment'] = ""
         
-        # Process each review with improved translation
-        for idx, row in df.iterrows():
-            if idx % 50 == 0:
-                print(f"  Processing review {idx + 1}/{len(df)}...")
+        # Process reviews with multi-workers (8 workers)
+        print("🔄 Processing reviews with 8 workers...")
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            # Prepare arguments for workers
+            args_list = [(idx, row, self.config) for idx, row in df.iterrows()]
             
-            try:
-                # Translate content and title
-                translated_content = safe_translate(row.get('content', ''), self.config)
-                translated_title = safe_translate(row.get('title', ''), self.config)
+            # Submit all tasks
+            future_to_idx = {executor.submit(process_review_worker, args): args[0] for args in args_list}
+            
+            # Process results with progress bar
+            results = {}
+            for future in tqdm(as_completed(future_to_idx), total=len(args_list), desc="Processing reviews"):
+                result = future.result()
+                results[result['idx']] = result
                 
-                df.at[idx, 'translated_content'] = translated_content
-                df.at[idx, 'translated_title'] = translated_title
+                # Update DataFrame with results
+                idx = result['idx']
+                df.at[idx, 'translated_content'] = result['translated_content']
+                df.at[idx, 'sentiment_score'] = result['sentiment_score']
+                df.at[idx, 'positive_words'] = result['positive_words']
+                df.at[idx, 'negative_words'] = result['negative_words']
+                df.at[idx, 'problem_category'] = result['problem_category']
+                df.at[idx, 'overall_sentiment'] = result['overall_sentiment']
                 
-                # Use translated text for analysis
-                analysis_text = f"{translated_title} {translated_content}".strip()
-                
-                # Categorize
-                category = categorize_review(translated_content, translated_title)
-                df.at[idx, 'category'] = category
-                
-                # Sentiment analysis
-                sentiment = analyze_sentiment(analysis_text)
-                df.at[idx, 'sentiment_score'] = sentiment['sentiment_score']
-                df.at[idx, 'sentiment_category'] = sentiment['sentiment_category']
-                df.at[idx, 'sentiment_words'] = ', '.join(sentiment['sentiment_words'])
-                df.at[idx, 'positive_words'] = ', '.join(sentiment['positive_words'])
-                df.at[idx, 'negative_words'] = ', '.join(sentiment['negative_words'])
-                
-            except Exception as e:
-                print(f"  Error processing review {idx}: {e}")
-                continue
+                if not result['success']:
+                    print(f"  Error processing review {idx}: {result.get('error', 'Unknown error')}")
         
-        # Save analyzed data
-        output_dir = os.path.dirname(file_path)
-        analyzed_file = os.path.join(output_dir, f"{app_key}_analyzed.xlsx")
+        # Save analyzed data to analysis subfolder
+        analyzed_file = os.path.join(analysis_dir, f"{app_key}_analyzed.xlsx")
         df.to_excel(analyzed_file, index=False)
         
-        # Generate visualizations
-        self.create_analysis_charts(df, app_key, output_dir)
+        # Generate visualizations in analysis subfolder
+        self.create_analysis_charts(df, app_key, analysis_dir)
         
-        # Generate summary report
+        # Create word cloud only for WeLab Bank
+        deepseek_config = self.config.get('deepseek', {})
+        wordcloud_enabled_for = deepseek_config.get('enable_wordcloud_only_for', [])
+        if app_key in wordcloud_enabled_for:
+            self.create_wordclouds(df, app_key, analysis_dir)
+        else:
+            print(f"📊 Skipping wordcloud generation for {app_key} (not in wordcloud_enabled_for list)")
+        
+        # Generate summary report in analysis subfolder
         summary = self.generate_summary_report(df, app_key)
-        summary_file = os.path.join(output_dir, f"{app_key}_summary.json")
+        summary_file = os.path.join(analysis_dir, f"{app_key}_summary.json")
         with open(summary_file, 'w', encoding='utf-8') as f:
             json.dump(summary, f, indent=2, ensure_ascii=False)
         
-        print(f"✅ Comprehensive analysis completed for {app_key}")
+        print(f"✅ Simplified analysis completed for {app_key}")
+        print(f"📁 Analysis files saved to: {analysis_dir}")
         return analyzed_file
     
     def create_analysis_charts(self, df: pd.DataFrame, app_key: str, output_dir: str):
@@ -409,12 +668,12 @@ class AppReviewScraper:
         # Create sentiment distribution chart
         fig, axes = plt.subplots(2, 2, figsize=(15, 12))
         
-        # Sentiment distribution
-        sentiment_counts = df['sentiment_category'].value_counts()
+        # Overall sentiment distribution
+        sentiment_counts = df['overall_sentiment'].value_counts()
         axes[0, 0].pie(sentiment_counts.values, labels=sentiment_counts.index, 
                        colors=[sentiment_colors.get(cat, '#999999') for cat in sentiment_counts.index],
                        autopct='%1.1f%%')
-        axes[0, 0].set_title('Sentiment Distribution')
+        axes[0, 0].set_title('Overall Sentiment Distribution')
         
         # Rating distribution
         rating_counts = df['rating'].value_counts().sort_index()
@@ -424,17 +683,19 @@ class AppReviewScraper:
         axes[0, 1].set_xlabel('Rating')
         axes[0, 1].set_ylabel('Count')
         
-        # Category distribution
-        category_counts = df['category'].value_counts()
+        # Problem category distribution
+        category_counts = df['problem_category'].value_counts()
         axes[1, 0].barh(category_counts.index, category_counts.values,
                         color=colors.get("chart_palette", ['#1f77b4'] * len(category_counts))[0])
-        axes[1, 0].set_title('Review Categories')
+        axes[1, 0].set_title('Problem Categories')
         axes[1, 0].set_xlabel('Count')
         
         # Sentiment over time (if date available)
         if 'date' in df.columns:
             df['date'] = pd.to_datetime(df['date'], errors='coerce')
-            monthly_sentiment = df.groupby([df['date'].dt.to_period('M'), 'sentiment_category']).size().unstack(fill_value=0)
+            # Remove timezone info to avoid warning
+            df['date'] = df['date'].dt.tz_localize(None)
+            monthly_sentiment = df.groupby([df['date'].dt.to_period('M'), 'overall_sentiment']).size().unstack(fill_value=0)
             monthly_sentiment.plot(kind='area', ax=axes[1, 1], 
                                  color=[sentiment_colors.get(col, '#999999') for col in monthly_sentiment.columns])
             axes[1, 1].set_title('Sentiment Trends Over Time')
@@ -450,40 +711,94 @@ class AppReviewScraper:
         plt.savefig(chart_file, dpi=300, bbox_inches='tight')
         plt.close()
         
-        # Create word cloud for positive and negative reviews
-        self.create_wordclouds(df, app_key, output_dir)
+
     
     def create_wordclouds(self, df: pd.DataFrame, app_key: str, output_dir: str):
-        """Create word clouds for positive and negative reviews"""
+        """Create word clouds for positive and negative reviews with 2-5 word phrases"""
         try:
-            fig, axes = plt.subplots(1, 2, figsize=(20, 10))
+            # Set font to Arial
+            plt.rcParams['font.family'] = 'Arial'
             
             # Positive reviews word cloud
-            positive_reviews = df[df['sentiment_category'] == 'positive']['translated_content'].dropna()
+            positive_reviews = df[df['overall_sentiment'] == 'positive']['translated_content'].dropna()
             if not positive_reviews.empty:
                 positive_text = ' '.join(positive_reviews.astype(str))
-                wordcloud_pos = WordCloud(width=800, height=400, 
-                                        background_color='white',
-                                        colormap='Greens').generate(positive_text)
-                axes[0].imshow(wordcloud_pos, interpolation='bilinear')
-                axes[0].set_title('Positive Reviews Word Cloud', fontsize=16)
-                axes[0].axis('off')
+                
+                # Use DeepSeek to extract 2-5 word phrases
+                ai_enhanced_text = call_deepseek_api(positive_text, self.config)
+                if ai_enhanced_text and len(ai_enhanced_text.split()) > 10:  # Ensure we got meaningful phrases
+                    print(f"🤖 Using AI-enhanced 2-5 word phrases for {app_key} positive reviews")
+                    print(f"📝 Sample phrases: {' '.join(ai_enhanced_text.split()[:20])}")
+                    wordcloud_text = ai_enhanced_text
+                else:
+                    print(f"📝 Using fallback phrase extraction for {app_key} positive reviews")
+                    # Fallback: extract common banking phrases manually
+                    wordcloud_text = self.extract_banking_phrases(positive_text)
+                    print(f"📝 Fallback phrases: {' '.join(wordcloud_text.split()[:20])}")
+                
+                # Create positive wordcloud with Pacific Blue color (0, 184, 245)
+                # Pre-process text to preserve phrases
+                processed_text = self.preserve_phrases_for_wordcloud(wordcloud_text)
+                wordcloud_pos = WordCloud(
+                    width=800, height=800,  # Square size
+                    background_color='white',
+                    color_func=lambda *args, **kwargs: (0, 184, 245),  # Pacific Blue
+                    max_words=100,
+                    stopwords=None,
+                    min_font_size=10,
+                    max_font_size=80,
+                    prefer_horizontal=0.7,  # Allow more vertical text for phrases
+                    collocations=False  # Don't count word pairs as single words
+                ).generate(processed_text)
+                
+                # Save positive wordcloud separately
+                plt.figure(figsize=(10, 10))
+                plt.imshow(wordcloud_pos, interpolation='bilinear')
+                plt.axis('off')
+                positive_wordcloud_file = os.path.join(output_dir, f"{app_key}_positive_wordcloud.png")
+                plt.savefig(positive_wordcloud_file, dpi=300, bbox_inches='tight', facecolor='white')
+                plt.close()
             
             # Negative reviews word cloud
-            negative_reviews = df[df['sentiment_category'] == 'negative']['translated_content'].dropna()
+            negative_reviews = df[df['overall_sentiment'] == 'negative']['translated_content'].dropna()
             if not negative_reviews.empty:
                 negative_text = ' '.join(negative_reviews.astype(str))
-                wordcloud_neg = WordCloud(width=800, height=400, 
-                                        background_color='white',
-                                        colormap='Reds').generate(negative_text)
-                axes[1].imshow(wordcloud_neg, interpolation='bilinear')
-                axes[1].set_title('Negative Reviews Word Cloud', fontsize=16)
-                axes[1].axis('off')
-            
-            plt.tight_layout()
-            wordcloud_file = os.path.join(output_dir, f"{app_key}_wordclouds.png")
-            plt.savefig(wordcloud_file, dpi=300, bbox_inches='tight')
-            plt.close()
+                
+                # Use DeepSeek to extract 2-5 word phrases
+                ai_enhanced_text = call_deepseek_api(negative_text, self.config)
+                if ai_enhanced_text and len(ai_enhanced_text.split()) > 10:  # Ensure we got meaningful phrases
+                    print(f"🤖 Using AI-enhanced 2-5 word phrases for {app_key} negative reviews")
+                    print(f"📝 Sample phrases: {' '.join(ai_enhanced_text.split()[:20])}")
+                    wordcloud_text = ai_enhanced_text
+                else:
+                    print(f"📝 Using fallback phrase extraction for {app_key} negative reviews")
+                    # Fallback: extract common banking phrases manually
+                    wordcloud_text = self.extract_banking_phrases(negative_text)
+                    print(f"📝 Fallback phrases: {' '.join(wordcloud_text.split()[:20])}")
+                
+                # Create negative wordcloud with Dark Blue color (12, 35, 60)
+                # Pre-process text to preserve phrases
+                processed_text = self.preserve_phrases_for_wordcloud(wordcloud_text)
+                wordcloud_neg = WordCloud(
+                    width=800, height=800,  # Square size
+                    background_color='white',
+                    color_func=lambda *args, **kwargs: (12, 35, 60),  # Dark Blue
+                    max_words=100,
+                    stopwords=None,
+                    min_font_size=10,
+                    max_font_size=80,
+                    prefer_horizontal=0.7,  # Allow more vertical text for phrases
+                    collocations=False  # Don't count word pairs as single words
+                ).generate(processed_text)
+                
+                # Save negative wordcloud separately
+                plt.figure(figsize=(10, 10))
+                plt.imshow(wordcloud_neg, interpolation='bilinear')
+                plt.axis('off')
+                negative_wordcloud_file = os.path.join(output_dir, f"{app_key}_negative_wordcloud.png")
+                plt.savefig(negative_wordcloud_file, dpi=300, bbox_inches='tight', facecolor='white')
+                plt.close()
+                
         except Exception as e:
             print(f"⚠️ Could not generate word clouds: {e}")
     
@@ -495,9 +810,9 @@ class AppReviewScraper:
             "app_key": app_key,
             "generated_at": datetime.now().isoformat(),
             "total_reviews": total_reviews,
-            "sentiment_distribution": df['sentiment_category'].value_counts().to_dict(),
+            "overall_sentiment_distribution": df['overall_sentiment'].value_counts().to_dict(),
             "rating_distribution": df['rating'].value_counts().sort_index().to_dict(),
-            "category_distribution": df['category'].value_counts().to_dict(),
+            "problem_category_distribution": df['problem_category'].value_counts().to_dict(),
             "average_rating": float(df['rating'].mean()) if 'rating' in df.columns else 0,
             "average_sentiment_score": float(df['sentiment_score'].mean()),
             "platform_distribution": df['platform'].value_counts().to_dict() if 'platform' in df.columns else {},
@@ -513,19 +828,19 @@ class AppReviewScraper:
         recommendations = []
         
         # Sentiment-based recommendations
-        negative_ratio = len(df[df['sentiment_category'] == 'negative']) / len(df)
+        negative_ratio = len(df[df['overall_sentiment'] == 'negative']) / len(df)
         if negative_ratio > 0.3:
             recommendations.append("High negative sentiment detected. Focus on addressing user concerns.")
         
-        # Category-based recommendations
-        top_categories = df['category'].value_counts().head(3)
+        # Problem category-based recommendations
+        top_categories = df['problem_category'].value_counts().head(3)
         for category, count in top_categories.items():
-            if category == 'performance' and count > len(df) * 0.2:
-                recommendations.append("Performance issues frequently mentioned. Consider app optimization.")
-            elif category == 'login_auth' and count > len(df) * 0.15:
-                recommendations.append("Authentication issues reported. Review login process.")
-            elif category == 'ui_ux' and count > len(df) * 0.15:
-                recommendations.append("UI/UX concerns raised. Consider interface improvements.")
+            if category == 'App Operating Issues' and count > len(df) * 0.2:
+                recommendations.append("App operating issues frequently mentioned. Consider app optimization.")
+            elif category == 'Account Verification Issues' and count > len(df) * 0.15:
+                recommendations.append("Account verification issues reported. Review KYC process.")
+            elif category == 'Account Opening Issues' and count > len(df) * 0.15:
+                recommendations.append("Account opening issues raised. Consider streamlining registration.")
         
         # Rating-based recommendations
         avg_rating = df['rating'].mean()
@@ -579,7 +894,7 @@ class AppReviewScraper:
         if exported_file:
             print(f"\n📁 File Generated:")
             print(f"   📄 {exported_file}")
-
+        
     def export_results_multi(self, app_keys: List[str], all_results: Dict[str, Dict[str, List[Review]]], 
                             all_reviews: List[Review], timestamp: str, base_filename: str) -> str:
         """Export results from multiple apps to single folder"""
@@ -833,7 +1148,7 @@ class AppReviewScraper:
                         print(f"  🤖 Play Store: {len(play_reviews)} scraped / {bank_data['play_store']['total_available']} total, avg rating: {bank_data['play_store']['average_rating']}")
                     else:
                         print(f"  🤖 Play Store: No reviews scraped / {bank_data['play_store']['total_available']} total available")
-                except Exception as e:
+        except Exception as e:
                     print(f"  🤖 Play Store: Error - {str(e)[:50]}...")
             
             # Quick check App Store (with total available info)
@@ -1005,9 +1320,12 @@ class AppReviewScraper:
         self.create_combined_wordclouds(reviews_data, output_dir, base_filename)
 
     def create_combined_wordclouds(self, reviews_data: List[Dict], output_dir: str, base_filename: str):
-        """Create word clouds for combined analysis"""
+        """Create word clouds for combined analysis with AI-enhanced processing"""
         from wordcloud import WordCloud
         import matplotlib.pyplot as plt
+        
+        # Set font to Arial
+        plt.rcParams['font.family'] = 'Arial'
         
         # Separate by sentiment
         positive_text = " ".join([review['translated_content'] for review in reviews_data 
@@ -1018,17 +1336,53 @@ class AppReviewScraper:
         fig, axes = plt.subplots(1, 2, figsize=(20, 8))
         
         if positive_text.strip():
-            wordcloud_pos = WordCloud(width=800, height=400, background_color='white', 
-                                     colormap='Greens').generate(positive_text)
+            # Try AI-enhanced processing first
+            ai_enhanced_text = call_deepseek_api(positive_text, self.config)
+            if ai_enhanced_text:
+                print(f"🤖 Using AI-enhanced keywords for combined positive reviews")
+                wordcloud_text = ai_enhanced_text
+            else:
+                print(f"📝 Using standard text processing for combined positive reviews")
+                wordcloud_text = positive_text
+            
+            wordcloud_pos = WordCloud(
+                width=800, height=400, 
+                background_color='white',
+                colormap='Greens',
+                font_path=None,  # Use default font
+                max_words=100,
+                stopwords=None,
+                min_font_size=10,
+                max_font_size=80
+            ).generate(wordcloud_text)
+            
             axes[0].imshow(wordcloud_pos, interpolation='bilinear')
-            axes[0].set_title('Positive Reviews Word Cloud', fontsize=14, fontweight='bold')
+            axes[0].set_title('Positive Reviews Word Cloud', fontsize=14, fontweight='bold', fontfamily='Arial')
             axes[0].axis('off')
         
         if negative_text.strip():
-            wordcloud_neg = WordCloud(width=800, height=400, background_color='white', 
-                                     colormap='Reds').generate(negative_text)
+            # Try AI-enhanced processing first
+            ai_enhanced_text = call_deepseek_api(negative_text, self.config)
+            if ai_enhanced_text:
+                print(f"🤖 Using AI-enhanced keywords for combined negative reviews")
+                wordcloud_text = ai_enhanced_text
+            else:
+                print(f"📝 Using standard text processing for combined negative reviews")
+                wordcloud_text = negative_text
+            
+            wordcloud_neg = WordCloud(
+                width=800, height=400, 
+                background_color='white',
+                colormap='Reds',
+                font_path=None,  # Use default font
+                max_words=100,
+                stopwords=None,
+                min_font_size=10,
+                max_font_size=80
+            ).generate(wordcloud_text)
+            
             axes[1].imshow(wordcloud_neg, interpolation='bilinear')
-            axes[1].set_title('Negative Reviews Word Cloud', fontsize=14, fontweight='bold')
+            axes[1].set_title('Negative Reviews Word Cloud', fontsize=14, fontweight='bold', fontfamily='Arial')
             axes[1].axis('off')
         
         plt.tight_layout()
@@ -1088,197 +1442,307 @@ class AppReviewScraper:
         comprehensive_overview["banks_with_reviews"] = banks_with_reviews
 
 
+def process_review_worker(args):
+    """Worker function for processing individual reviews with multi-threading"""
+    idx, row, config = args
+    try:
+        # Get content and title, handling NaN values
+        content = row.get('content', '')
+        title = row.get('title', '')
+        
+        # 1. Translate content using DeepSeek
+        translated_content = translate_with_deepseek(content, config)
+        
+        # 2. Sentiment analysis
+        analysis_text = f"{title} {translated_content}".strip()
+        sentiment = analyze_sentiment_deepseek(analysis_text, config)
+        
+        # 3. Positive and negative words (simplified)
+        blob = TextBlob(translated_content)
+        # Extract words from assessments (assessments returns tuples with word, score, and other data)
+        positive_words = []
+        negative_words = []
+        for assessment in blob.sentiment_assessments.assessments:
+            if len(assessment) >= 2:
+                word = assessment[0]
+                score = assessment[1]
+                # Handle case where word might be a list
+                if isinstance(word, list):
+                    word = ' '.join(word)
+                if isinstance(word, str):
+                    if score > 0:
+                        positive_words.append(word)
+                    elif score < 0:
+                        negative_words.append(word)
+        
+        positive_words_str = ', '.join(positive_words[:5])  # Top 5 positive words
+        negative_words_str = ', '.join(negative_words[:5])  # Top 5 negative words
+        
+        # 4. Problem categorization
+        problem_category = categorize_problem_simple(translated_content)
+        
+        # 5. Overall sentiment (positive/negative)
+        if sentiment['sentiment_score'] > 0.6:
+            overall_sentiment = 'positive'
+        elif sentiment['sentiment_score'] < 0.4:
+            overall_sentiment = 'negative'
+        else:
+            overall_sentiment = 'neutral'
+        
+        return {
+            'idx': idx,
+            'translated_content': translated_content,
+            'sentiment_score': sentiment['sentiment_score'],
+            'positive_words': positive_words_str,
+            'negative_words': negative_words_str,
+            'problem_category': problem_category,
+            'overall_sentiment': overall_sentiment,
+            'success': True
+        }
+        
+    except Exception as e:
+        return {
+            'idx': idx,
+            'translated_content': '',
+            'sentiment_score': 0.0,
+            'positive_words': '',
+            'negative_words': '',
+            'problem_category': 'General',
+            'overall_sentiment': 'neutral',
+            'success': False,
+            'error': str(e)
+        }
+
+    def extract_banking_phrases(self, text: str) -> str:
+        """Extract common banking phrases from text as fallback"""
+        import re
+        
+        # Common banking phrases to look for
+        banking_phrases = [
+            # Account related
+            r'\baccount opening\b', r'\baccount verification\b', r'\baccount setup\b',
+            r'\baccount access\b', r'\baccount management\b', r'\baccount security\b',
+            
+            # App related
+            r'\bapp crashes\b', r'\bapp freezes\b', r'\bapp loading\b', r'\bapp updates\b',
+            r'\bapp performance\b', r'\bapp interface\b', r'\bapp navigation\b',
+            
+            # Login/Auth related
+            r'\blogin problems\b', r'\blogin issues\b', r'\bauthentication failed\b',
+            r'\bpassword reset\b', r'\bsecurity verification\b', r'\bidentity verification\b',
+            
+            # Transaction related
+            r'\btransfer money\b', r'\bpayment processing\b', r'\btransaction failed\b',
+            r'\bpayment issues\b', r'\bmoney transfer\b', r'\btransaction processing\b',
+            
+            # Customer service
+            r'\bcustomer service\b', r'\bcustomer support\b', r'\bsupport team\b',
+            r'\bhelp desk\b', r'\bcustomer care\b',
+            
+            # Technical issues
+            r'\bsystem error\b', r'\btechnical problems\b', r'\bserver issues\b',
+            r'\bnetwork problems\b', r'\bconnection issues\b', r'\bdata loading\b',
+            
+            # User experience
+            r'\buser interface\b', r'\buser experience\b', r'\beasy to use\b',
+            r'\bdifficult to use\b', r'\bconfusing interface\b', r'\bintuitive design\b',
+            
+            # Banking features
+            r'\bonline banking\b', r'\bmobile banking\b', r'\bdigital banking\b',
+            r'\bbanking app\b', r'\bchecking account\b', r'\bsavings account\b',
+            
+            # Common issues
+            r'\bvery slow\b', r'\btoo slow\b', r'\bnot working\b', r'\bdoes not work\b',
+            r'\bkeep crashing\b', r'\bconstantly crashes\b', r'\bunable to access\b',
+            r'\bcannot access\b', r'\bhard to use\b', r'\bdifficult to navigate\b'
+        ]
+        
+        found_phrases = []
+        text_lower = text.lower()
+        
+        for phrase_pattern in banking_phrases:
+            matches = re.findall(phrase_pattern, text_lower)
+            found_phrases.extend(matches)
+        
+        # Also extract common 2-3 word combinations
+        words = text_lower.split()
+        for i in range(len(words) - 1):
+            # 2-word phrases
+            phrase_2 = f"{words[i]} {words[i+1]}"
+            if len(phrase_2.split()) == 2 and len(phrase_2) > 5:
+                found_phrases.append(phrase_2)
+            
+            # 3-word phrases
+            if i < len(words) - 2:
+                phrase_3 = f"{words[i]} {words[i+1]} {words[i+2]}"
+                if len(phrase_3.split()) == 3 and len(phrase_3) > 8:
+                    found_phrases.append(phrase_3)
+        
+        # Remove duplicates and join
+        unique_phrases = list(set(found_phrases))
+        return ' '.join(unique_phrases)
+    
+    def preserve_phrases_for_wordcloud(self, text: str) -> str:
+        """Preserve multi-word phrases for wordcloud by using underscores"""
+        import re
+        
+        # Split text into words/phrases
+        words = text.split()
+        processed_words = []
+        
+        i = 0
+        while i < len(words):
+            # Check if this word is part of a phrase (2-5 words)
+            phrase_length = 1
+            phrase_words = [words[i]]
+            
+            # Look ahead to find complete phrases
+            for j in range(1, 5):  # Check up to 5 words
+                if i + j < len(words):
+                    next_word = words[i + j]
+                    # If next word doesn't start with uppercase or is a common connector, it's part of phrase
+                    if (not next_word[0].isupper() and 
+                        next_word.lower() not in ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by']):
+                        phrase_words.append(next_word)
+                        phrase_length += 1
+                    else:
+                        break
+                else:
+                    break
+            
+            # If we have a phrase (2+ words), join with underscores
+            if phrase_length >= 2:
+                phrase = '_'.join(phrase_words)
+                processed_words.append(phrase)
+                i += phrase_length  # Skip the words we've already processed
+            else:
+                # Single word, keep as is
+                processed_words.append(words[i])
+                i += 1
+        
+        return ' '.join(processed_words)
+
+
 def main():
-    """Main entry point"""
     parser = argparse.ArgumentParser(
-        description="Hong Kong Banking Apps Review Scraper and Sentiment Analyzer",
+        description="Scrape and analyze app reviews from App Store and Play Store",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=textwrap.dedent('''
-        Examples:
-          python main.py welab_bank                    # Analyze one bank
-          python main.py mox_bank za_bank welab_bank   # Analyze multiple banks
-          python main.py --all                         # Analyze all banks
-          python main.py --list-apps                   # List available banks
-          python main.py welab_bank --no-analysis     # Just scrape, no analysis
-        ''')
+        epilog=textwrap.dedent("""
+Examples:
+  python main.py welab_bank                    # Scrape and analyze WeLab Bank
+  python main.py welab_bank za_bank mox_bank   # Scrape and analyze multiple banks
+  python main.py --all                         # Scrape and analyze all banks
+  python main.py --overview                    # Create overview of all banks
+  python main.py --initial welab_bank          # Force re-scrape even if reviews exist
+        """)
     )
     
-    parser.add_argument(
-        'apps', 
-        nargs='*',  # Accept multiple apps
-        help='Bank app keys to analyze (space-separated for multiple)'
-    )
-    parser.add_argument('--overview', action='store_true', help='Create comprehensive overview of ALL banks in config')
-    parser.add_argument('--all', action='store_true', help='Process all configured banks')
-    parser.add_argument('--list-apps', action='store_true', help='List available bank apps')
-    parser.add_argument('--no-analysis', action='store_true', help='Skip sentiment analysis')
+    parser.add_argument('apps', nargs='*', 
+                       help='App keys to scrape (e.g., welab_bank, za_bank)')
+    parser.add_argument('--all', action='store_true',
+                       help='Scrape all configured apps')
+    parser.add_argument('--overview', action='store_true',
+                       help='Create overview JSON for all apps')
+    parser.add_argument('--initial', action='store_true',
+                       help='Force re-scraping even if reviews already exist')
+    parser.add_argument('--no-analysis', action='store_true',
+                       help='Skip analysis, only scrape reviews')
     
     args = parser.parse_args()
     
-    # Handle special options first
-    if args.list_apps:
-        list_available_apps()
-        return
+    # Load configuration
+    config = load_config()
+    scraper = AppReviewScraper()
+    scraper.config = config
     
-    if args.overview:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        scraper = AppReviewScraper()
-        scraper.config = load_config() # Assuming load_config() is available or passed
-        overview_file = scraper.create_comprehensive_overview(timestamp)
-        print(f"\n✅ Comprehensive overview completed!")
-        print(f"📄 Overview file: {overview_file}")
-        return
-        
-    # Validate arguments
-    if not args.all and not args.apps:
-        parser.error("Please specify bank app keys or use --all")
-        return
-        
-    try:
-        # Load configuration
-        config = load_config()
+    # Determine which apps to process
+    if args.all:
         app_config_data = load_app_config()
-        
-        # Create single timestamp for this run
+        app_keys = list(app_config_data.get("apps", {}).keys())
+    elif args.overview:
+        # Create comprehensive overview
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        overview_file = scraper.create_comprehensive_overview(timestamp)
+        print(f"\n✅ Comprehensive overview created: {overview_file}")
+            return
+    elif not args.apps:
+        parser.print_help()
+        return
+    else:
+        app_keys = args.apps
+    
+    print(f"🚀 Starting review scraping and analysis for {len(app_keys)} app(s)...")
+    print("="*80)
+    
+    # Create single timestamp for all analysis
+    analysis_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # Process each app
+    for app_key in app_keys:
+        print(f"\n📱 Processing {app_key}...")
         
-        # Determine which apps to process
-        if args.all:
-            apps_to_process = list(app_config_data.get("apps", {}).keys())
-            print(f"🚀 Processing all {len(apps_to_process)} banks...")
+        # Check if reviews already exist (unless --initial is used)
+        review_file = f"output/{app_key}_reviews.xlsx"
+        if os.path.exists(review_file) and not args.initial:
+            print(f"  ✅ Reviews already exist for {app_key}, skipping scraping...")
+            print(f"  📄 Using existing file: {review_file}")
+            
+            # Run analysis on existing file
+            if not args.no_analysis:
+                try:
+                    analysis_results = scraper.run_comprehensive_analysis(review_file, app_key, analysis_timestamp)
+                    print(f"  ✅ Analysis completed! Results saved to: {analysis_results}")
+                except Exception as e:
+                    print(f"  ❌ Analysis failed: {e}")
         else:
-            apps_to_process = args.apps
-            # Validate app keys
-            available_apps = set(app_config_data.get("apps", {}).keys())
-            invalid_apps = [app for app in apps_to_process if app not in available_apps]
-            if invalid_apps:
-                print(f"❌ Error: Unknown bank app keys: {', '.join(invalid_apps)}")
-                print("Use --list-apps to see available banks")
-                sys.exit(1)
-            
-            print(f"🚀 Processing {len(apps_to_process)} bank(s): {', '.join(apps_to_process)}")
-        
-        # Create main scraper instance
-        scraper = AppReviewScraper()
-        scraper.config = config
-        
-        # Collect all results
-        all_results = {}
-        all_reviews = []
-        overview_data = {}
-        
-        for app_key in apps_to_process:
-            print(f"\n{'='*60}")
-            print(f"🏦 PROCESSING: {app_key.upper().replace('_', ' ')}")
-            print(f"{'='*60}")
-            
-            app_config = get_app_config(app_key)
-            if not app_config:
-                print(f"❌ Error: Configuration not found for {app_key}")
-                continue
-            
-            # Scrape reviews for this app
-            results = scraper.scrape_app(app_config)
-            
-            if results:
-                all_results[app_key] = results
+            # Scrape new reviews
+            try:
+                app_config = get_app_config(app_key)
+                if not app_config:
+                    print(f"  ❌ App configuration not found for {app_key}")
+                    continue
                 
-                # Collect all reviews from both platforms
-                app_reviews = []
-                for platform_reviews in results.values():
-                    app_reviews.extend(platform_reviews)
+                print(f"  🔍 Scraping reviews for {app_config.get('name', app_key)}...")
+                results = scraper.scrape_app(app_config)
                 
-                all_reviews.extend(app_reviews)
+                if not results or not any(results.values()):
+                    print(f"  ⚠️ No reviews found for {app_key}")
+                    continue
                 
-                # Create overview entry
-                overview_data[app_key] = {
-                    "bank_name": app_config.get("name", app_key),
+                # Export results (without timestamp in filename)
+                exported_file = scraper.export_results(app_key, results)
+                print(f"  📄 Reviews exported to: {exported_file}")
+                
+                # Run analysis if requested
+                if not args.no_analysis:
+                    try:
+                        analysis_results = scraper.run_comprehensive_analysis(exported_file, app_key, analysis_timestamp)
+                        print(f"  ✅ Analysis completed! Results saved to: {analysis_results}")
+    except Exception as e:
+                        print(f"  ❌ Analysis failed: {e}")
+                
+                # Log scraping time
+                scraping_log = {
+                    "app_key": app_key,
+                    "scraped_at": datetime.now().isoformat(),
                     "app_store_reviews": len(results.get("app_store", [])),
                     "play_store_reviews": len(results.get("play_store", [])),
-                    "total_reviews": len(app_reviews)
+                    "total_reviews": sum(len(reviews) for reviews in results.values())
                 }
                 
-                if app_reviews:
-                    overview_data[app_key]["average_rating"] = sum(r.rating for r in app_reviews) / len(app_reviews)
-                    
-                    # Rating distribution
-                    rating_dist = {}
-                    for review in app_reviews:
-                        rating_dist[review.rating] = rating_dist.get(review.rating, 0) + 1
-                    overview_data[app_key]["rating_distribution"] = rating_dist
-                else:
-                    overview_data[app_key]["average_rating"] = 0
-                    overview_data[app_key]["rating_distribution"] = {}
+                # Save scraping log
+                log_dir = "logs"
+                os.makedirs(log_dir, exist_ok=True)
+                log_file = os.path.join(log_dir, f"{app_key}_scraping_log.json")
+                with open(log_file, 'w') as f:
+                    json.dump(scraping_log, f, indent=2)
+                print(f"  📝 Scraping log saved to: {log_file}")
                 
-                print(f"✅ {app_key}: {len(app_reviews)} total reviews")
-            else:
-                print(f"❌ {app_key}: No reviews found")
-                overview_data[app_key] = {
-                    "bank_name": app_config.get("name", app_key),
-                    "app_store_reviews": 0,
-                    "play_store_reviews": 0,
-                    "total_reviews": 0,
-                    "average_rating": 0,
-                    "rating_distribution": {}
-                }
-        
-        print(f"\n{'='*60}")
-        print(f"📊 PROCESSING COMPLETE")
-        print(f"{'='*60}")
-        
-        if all_reviews:
-            # Create combined filename
-            if len(apps_to_process) == 1:
-                base_filename = f"{apps_to_process[0]}_complete_{timestamp}"
-            elif args.all:
-                base_filename = f"all_banks_complete_{timestamp}"
-            else:
-                base_filename = f"{'_'.join(apps_to_process)}_complete_{timestamp}"
-            
-            if not args.no_analysis:
-                # Perform combined analysis
-                print(f"🔍 Performing combined sentiment analysis for {len(all_reviews)} reviews...")
-                exported_file = scraper.process_with_analysis_multi(apps_to_process, all_results, all_reviews, timestamp, base_filename)
-            else:
-                # Just export raw data
-                exported_file = scraper.export_results_multi(apps_to_process, all_results, all_reviews, timestamp, base_filename)
-            
-            # Create overview JSON
-            overview_file = scraper.create_overview_json(overview_data, timestamp, base_filename)
-            
-            # Display final summary
-            total_app_store = sum(data["app_store_reviews"] for data in overview_data.values())
-            total_play_store = sum(data["play_store_reviews"] for data in overview_data.values())
-            total_reviews = sum(data["total_reviews"] for data in overview_data.values())
-            
-            print(f"\n🎯 FINAL RESULTS")
-            print(f"{'='*50}")
-            print(f"📱 Banks Processed: {len(apps_to_process)}")
-            print(f"🍎 App Store Reviews: {total_app_store:,}")
-            print(f"🤖 Play Store Reviews: {total_play_store:,}")
-            print(f"📋 Total Reviews: {total_reviews:,}")
-            print(f"\n📁 Files Generated:")
-            print(f"   📄 {exported_file}")
-            print(f"   📊 {overview_file}")
-            
-            if not args.no_analysis:
-                print(f"\n🎨 Analysis includes:")
-                print(f"   • Sentiment analysis with translation")
-                print(f"   • Word clouds and visualizations") 
-                print(f"   • Rating distributions and trends")
-                print(f"   • Combined dashboard")
-            
-        else:
-            print("❌ No reviews collected from any banks")
+            except Exception as e:
+                print(f"  ❌ Error processing {app_key}: {e}")
+                continue
     
-    except KeyboardInterrupt:
-        print("\n⚠️  Analysis interrupted by user")
-        sys.exit(1)
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    print(f"\n✅ Processing completed for {len(app_keys)} app(s)!")
 
 
 if __name__ == "__main__":

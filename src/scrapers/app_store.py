@@ -43,7 +43,6 @@ class AppStoreScraper(BaseScraper):
         all_reviews = []
         countries = self.app_store_config.get("countries", ["us"])
         sort_methods = self.app_store_config.get("sort_methods", ["mostRecent"])
-        max_pages = self.app_store_config.get("max_pages", 10)
         
         for country in countries:
             self.logger.info(f"Scraping country: {country}")
@@ -52,7 +51,7 @@ class AppStoreScraper(BaseScraper):
                 sort_name = sort_method if sort_method else "Default Sort"
                 self.logger.info(f"Sorting by: {sort_name}")
                 
-                page_reviews = self._scrape_sort_method(country, sort_method, max_pages)
+                page_reviews = self._scrape_sort_method(country, sort_method)
                 new_reviews = 0
                 
                 for review in page_reviews:
@@ -68,11 +67,13 @@ class AppStoreScraper(BaseScraper):
         self.logger.info(f"🍎 Total unique App Store reviews collected: {len(all_reviews)}")
         return self.validate_reviews(all_reviews)
     
-    def _scrape_sort_method(self, country: str, sort_method: str, max_pages: int) -> List[Review]:
+    def _scrape_sort_method(self, country: str, sort_method: str) -> List[Review]:
         """Scrape reviews for a specific sort method"""
         reviews = []
         
-        for page in range(1, max_pages + 1):
+        # Remove max_pages limit - get all available pages
+        page = 1
+        while True:
             try:
                 page_reviews = self._get_reviews_page(page, sort_method, country)
                 
@@ -83,6 +84,11 @@ class AppStoreScraper(BaseScraper):
                 reviews.extend(page_reviews)
                 self.logger.debug(f"Page {page}: {len(page_reviews)} reviews")
                 
+                # If we got fewer reviews than expected, we've reached the end
+                if len(page_reviews) < 50:  # App Store typically returns 50 reviews per page
+                    break
+                
+                page += 1
                 self.rate_limit("between_requests")
                 
             except Exception as e:

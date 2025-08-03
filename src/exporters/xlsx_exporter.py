@@ -62,7 +62,7 @@ class XLSXExporter:
         
         # Ensure output directory exists
         Path(output_dir).mkdir(parents=True, exist_ok=True)
-        
+            
         # Create full file path
         if not filename.endswith('.xlsx'):
             filename += '.xlsx'
@@ -71,7 +71,7 @@ class XLSXExporter:
         try:
             # Convert reviews to DataFrame
             df = self._reviews_to_dataframe(reviews)
-            
+                
             # Export with formatting
             self._export_with_formatting(df, str(filepath))
             
@@ -178,6 +178,6 @@ class XLSXExporter:
                     for row in range(2, len(df) + 2):
                         cell = worksheet.cell(row=row, column=col_idx)
                         cell.alignment = Alignment(wrap_text=True, vertical="top")
-                        
+                
         except Exception as e:
             self.logger.debug(f"Error formatting data columns: {e}") 

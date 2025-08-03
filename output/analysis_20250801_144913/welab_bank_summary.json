@@ -1,0 +1,59 @@
+{
+  "app_key": "welab_bank",
+  "generated_at": "2025-08-01T15:07:17.783490",
+  "total_reviews": 279,
+  "overall_sentiment_distribution": {
+    "negative": 225,
+    "neutral": 28,
+    "positive": 26
+  },
+  "rating_distribution": {
+    "1": 169,
+    "2": 16,
+    "3": 12,
+    "4": 10,
+    "5": 72
+  },
+  "problem_category_distribution": {
+    "General": 120,
+    "App Operating Issues": 94,
+    "Account Opening Issues": 29,
+    "Account Verification Issues": 28,
+    "Rewards Issues": 8
+  },
+  "average_rating": 2.283154121863799,
+  "average_sentiment_score": 0.07874303120382871,
+  "platform_distribution": {
+    "Play Store": 185,
+    "App Store": 94
+  },
+  "top_positive_words": {
+    "": 119,
+    "good": 20,
+    "many": 17,
+    "more": 14,
+    "easy": 13,
+    "new": 10,
+    "first": 10,
+    "most": 9,
+    "great": 7,
+    "nice": 6
+  },
+  "top_negative_words": {
+    "": 159,
+    "unable": 10,
+    "failed": 9,
+    "worst": 6,
+    "past": 6,
+    "hard": 6,
+    "other": 6,
+    "stupid": 5,
+    "wasted": 5,
+    "impossible": 5
+  },
+  "recommendations": [
+    "High negative sentiment detected. Focus on addressing user concerns.",
+    "App operating issues frequently mentioned. Consider app optimization.",
+    "Low average rating. Urgent attention needed for app improvements."
+  ]
+}

@@ -55,12 +55,12 @@
     "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15"
   },
   "play_store": {
-    "batch_size": 200,
+    "batch_size": 1000,
     "languages": ["en"],
     "default_country": "hk"
   },
   "translation": {
-    "service": "googletrans",
+    "service": "deepseek",
     "target_language": "en",
     "max_retries": 3,
     "delay": 1,
@@ -72,5 +72,17 @@
     "enable_summary": true,
     "enable_wordcloud": true,
     "enable_charts": true
+  },
+  "deepseek": {
+    "enabled": true,
+    "api_key": "sk-1ccd242abedd4972a3bab56e67c16094",
+    "base_url": "https://api.deepseek.com/v1",
+    "model": "deepseek-chat",
+    "max_tokens": 1000,
+    "temperature": 0.3,
+    "wordcloud_prompt": "Extract the most important 2-4 word phrases from these banking app reviews. Focus on banking terms, user experience issues, features, and sentiment. Each phrase must be exactly 2-4 words and be human-readable. Examples: 'app crashes', 'customer service', 'account opening', 'transfer money', 'login problems', 'Face ID', 'verification process', 'poor service', 'good experience'. Remove repetitive phrases like 'a lot', 'lot of', 'a lot of'. Return only the phrases separated by spaces, no explanations or punctuation. Reviews: {reviews}",
+    "sentiment_prompt": "Analyze the sentiment of the following banking app review. Return only a JSON object with 'sentiment' (positive/negative/neutral), 'score' (0.0 to 1.0), and 'confidence' (0.0 to 1.0). Review: {review}",
+    "enable_wordcloud_only_for": ["welab_bank"],
+    "enable_sentiment_for_all": true
   }
 } 

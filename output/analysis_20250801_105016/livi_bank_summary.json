@@ -1,0 +1,58 @@
+{
+  "app_key": "livi_bank",
+  "generated_at": "2025-08-01T10:50:23.803350",
+  "total_reviews": 585,
+  "sentiment_distribution": {
+    "neutral": 293,
+    "positive": 188,
+    "negative": 104
+  },
+  "rating_distribution": {
+    "1": 324,
+    "2": 29,
+    "3": 28,
+    "4": 28,
+    "5": 176
+  },
+  "category_distribution": {
+    "general": 403,
+    "payment": 57,
+    "performance": 43,
+    "feature": 31,
+    "customer_service": 22,
+    "login_auth": 20,
+    "ui_ux": 5,
+    "security": 4
+  },
+  "average_rating": 2.4923076923076923,
+  "average_sentiment_score": 0.09981723890821112,
+  "platform_distribution": {
+    "Play Store": 354,
+    "App Store": 231
+  },
+  "top_positive_words": {
+    "": 488,
+    "good": 59,
+    "like": 15,
+    "great": 12,
+    "amazing": 6,
+    "awesome": 4,
+    "love": 3,
+    "excellent": 3,
+    "perfect": 1
+  },
+  "top_negative_words": {
+    "": 537,
+    "worst": 17,
+    "bad": 15,
+    "fail": 9,
+    "useless": 6,
+    "terrible": 4,
+    "disappointing": 3,
+    "horrible": 3,
+    "awful": 1
+  },
+  "recommendations": [
+    "Low average rating. Urgent attention needed for app improvements."
+  ]
+}
