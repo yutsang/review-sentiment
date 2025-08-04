@@ -14,6 +14,7 @@ from datetime import datetime
 import numpy as np
 import re
 import logging
+from src.utils.config import load_config
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +76,93 @@ def call_deepseek_api(text: str, config: dict) -> str:
     except Exception as e:
         print(f"⚠️ DeepSeek API call failed: {e}")
         return ""
+
+def call_deepseek_for_phrase_optimization(phrases_text: str, config: dict) -> str:
+    """Call DeepSeek API to intelligently merge similar phrases and remove duplicates for wordcloud"""
+    try:
+        deepseek_config = config.get('deepseek', {})
+        
+        api_key = deepseek_config.get('api_key')
+        if not api_key or api_key == "YOUR_DEEPSEEK_API_KEY_HERE":
+            return phrases_text
+            
+        base_url = deepseek_config.get('base_url', 'https://api.deepseek.com/v1')
+        model = deepseek_config.get('model', 'deepseek-chat')
+        max_tokens = deepseek_config.get('max_tokens', 1500)
+        temperature = deepseek_config.get('temperature', 0.2)
+        
+        # Create a specialized prompt for phrase optimization
+        optimization_prompt = """You are an expert at analyzing banking app review phrases for wordcloud generation. 
+
+Given a list of phrases extracted from banking app reviews, your task is to:
+1. Merge similar phrases into single, more meaningful phrases
+2. Remove exact duplicates and very similar variations
+3. Keep the most descriptive and impactful phrases
+4. Maintain a good variety (aim for 30-50 unique phrases)
+5. Focus on banking-specific terms and user experience phrases
+
+Examples of merging:
+- "app crashes", "app keeps crashing", "app crashes every time" → "app keeps crashing"
+- "easy to use", "very easy to use", "quite easy to use" → "easy to use"
+- "customer service", "customer support", "support team" → "customer service"
+- "transfer money", "money transfer", "send money" → "transfer money"
+
+Rules:
+- Keep phrases that are 2-4 words long
+- Prioritize phrases with higher frequency/importance
+- Remove generic phrases like "a lot", "lot of", "very good"
+- Keep banking-specific terms like "Face ID", "verification process", "account opening"
+- Maintain both positive and negative sentiment phrases
+
+Return only the optimized phrases separated by spaces, no explanations or punctuation.
+
+Phrases to optimize: {phrases}"""
+        
+        # Truncate if too long
+        if len(phrases_text) > 3000:
+            phrases_text = phrases_text[:3000] + "..."
+        
+        # Format prompt
+        prompt = optimization_prompt.format(phrases=phrases_text)
+        
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+        
+        data = {
+            'model': model,
+            'messages': [
+                {
+                    'role': 'user',
+                    'content': prompt
+                }
+            ],
+            'max_tokens': max_tokens,
+            'temperature': temperature
+        }
+        
+        response = requests.post(
+            f"{base_url}/chat/completions",
+            headers=headers,
+            json=data,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            content = result['choices'][0]['message']['content']
+            # Clean up the response - extract only phrases
+            optimized_phrases = content.replace('\n', ' ').replace('\r', ' ').strip()
+            print(f"🤖 DeepSeek optimized phrases: {optimized_phrases[:100]}...")
+            return optimized_phrases
+        else:
+            print(f"⚠️ DeepSeek API error: {response.status_code}")
+            return phrases_text
+            
+    except Exception as e:
+        print(f"⚠️ DeepSeek API call failed: {e}")
+        return phrases_text
 
 def preserve_phrases_for_wordcloud(text: str) -> str:
     """Preserve multi-word phrases for wordcloud by using underscores to keep them together"""
@@ -290,9 +378,9 @@ def process_review_worker(args):
         content = row.get('content', '')
         title = row.get('title', '')
         
-        # Translate non-English content before analysis
-        translated_content = translate_non_english_content(content, config)
-        translated_title = translate_non_english_content(title, config)
+        # Translate non-English content before analysis (temporarily disabled due to API limits)
+        translated_content = content  # Use original content for now
+        translated_title = title  # Use original title for now
         
         # 1. Sentiment analysis using translated text
         analysis_text = f"{translated_title} {translated_content}".strip()
@@ -713,11 +801,236 @@ def output_phrase_frequencies(df: pd.DataFrame, app_key: str, output_dir: str):
         for i, (phrase, count) in enumerate(top_negative[:10], 1):
             print(f"   {i:2d}. {phrase:<25} (frequency: {count})")
 
-def create_custom_wordcloud(text: str, color_func, output_file: str, title: str = ""):
-    """Create wordcloud with phrases using spaces, no underscores"""
+def extract_sentiment_aware_phrases(text: str, sentiment: str) -> dict:
+    """Extract phrases that are appropriate for the given sentiment context"""
     
-    # Extract phrases directly from text
-    phrase_counts = extract_phrases_from_text(text)
+    # Define sentiment-specific phrase patterns
+    negative_phrases = [
+        # App problems
+        r'\bapp keeps crashing\b', r'\bapp crashes every time\b', r'\bapp crashes on startup\b',
+        r'\bapp not working\b', r'\bapp freezes\b', r'\bapp freezes constantly\b',
+        r'\bapp loads slowly\b', r'\bapp loads very slowly\b', r'\bapp is slow\b',
+        r'\bcannot open app\b', r'\bapp won\'t open\b', r'\bapp refuses to open\b',
+        r'\bapp force closed\b', r'\bapp closes unexpectedly\b', r'\bapp stops working\b',
+        
+        # Account access issues
+        r'\bcannot open account\b', r'\baccount opening failed\b', r'\bcannot access account\b',
+        r'\bunable to access\b', r'\baccess denied\b', r'\baccount locked\b',
+        r'\baccount suspended\b', r'\baccount blocked\b', r'\bcannot login\b',
+        r'\blogin failed\b', r'\blogin always fails\b', r'\bunable to login\b',
+        r'\bcannot sign in\b', r'\bsign in failed\b', r'\bauthentication failed\b',
+        
+        # Verification problems
+        r'\bverification process stuck\b', r'\bverification failed\b', r'\bverification takes too long\b',
+        r'\bidentity verification stuck\b', r'\bphoto verification failed\b', r'\bFace ID not working\b',
+        r'\bFace ID failed\b', r'\bFace ID doesn\'t work\b', r'\bid card scan failed\b',
+        r'\bcannot scan id\b', r'\bid scanning failed\b', r'\bscanning the id\b',
+        r'\bstuck in scanning\b', r'\bverification stuck\b', r'\bverification error\b',
+        
+        # Transaction issues
+        r'\btransfer money failed\b', r'\bpayment failed\b', r'\btransaction failed\b',
+        r'\bpayment processing error\b', r'\btransaction declined\b', r'\bpayment rejected\b',
+        r'\bcannot transfer money\b', r'\bcannot add money\b', r'\bcannot send money\b',
+        r'\binsufficient funds error\b', r'\btransaction error\b', r'\bpayment error\b',
+        
+        # Customer service issues
+        r'\bcustomer service unhelpful\b', r'\bsupport team unresponsive\b', r'\bno response from support\b',
+        r'\bcustomer service bad\b', r'\bpoor customer service\b', r'\bterrible customer service\b',
+        r'\bcustomer service useless\b', r'\bsupport not helpful\b', r'\bno help from support\b',
+        
+        # User experience problems
+        r'\bnot user friendly\b', r'\bnot easy to use\b', r'\bdifficult to use\b',
+        r'\bhard to use\b', r'\btoo complicated\b', r'\btoo complex\b',
+        r'\bconfusing interface\b', r'\binterface confusing\b', r'\bhard to navigate\b',
+        r'\bdifficult to navigate\b', r'\bconfusing to navigate\b', r'\bnot intuitive\b',
+        r'\buser interface bad\b', r'\bui is bad\b', r'\binterface is bad\b',
+        
+        # Negative experiences
+        r'\bbad experience\b', r'\bterrible experience\b', r'\bawful experience\b',
+        r'\bhorrible experience\b', r'\bworst experience\b', r'\bvery bad experience\b',
+        r'\bdisappointing experience\b', r'\bfrustrating experience\b', r'\bannoying experience\b',
+        
+        # Specific negative phrases
+        r'\bworst app\b', r'\bworst app ever\b', r'\bterrible app\b', r'\bawful app\b',
+        r'\bvery bad app\b', r'\bhorrible app\b', r'\bdisappointing app\b',
+        r'\bapp hates poor people\b', r'\bapp is racist\b', r'\bapp discriminates\b',
+        r'\bhidden fees\b', r'\bunexpected charges\b', r'\boverdraft fee\b',
+        r'\bhigh fees\b', r'\btoo expensive\b', r'\bexpensive fees\b',
+        
+        # Update problems
+        r'\bapp update broke\b', r'\bnew version worse\b', r'\bupdate caused problems\b',
+        r'\bupdate broke app\b', r'\bafter updating\b', r'\bupgrade broke\b',
+        r'\bnew version bad\b', r'\bupdate ruined\b', r'\bupdate destroyed\b',
+        
+        # Network and technical issues
+        r'\bnetwork connection error\b', r'\bserver down\b', r'\bsystem maintenance\b',
+        r'\bconnection error\b', r'\bnetwork error\b', r'\bserver error\b',
+        r'\bsystem error\b', r'\btechnical error\b', r'\berror message\b',
+        
+        # Negative modifiers
+        r'\bnot working\b', r'\bdoesn\'t work\b', r'\bdoes not work\b',
+        r'\bnot functioning\b', r'\bnot operational\b', r'\bnot available\b',
+        r'\bnot accessible\b', r'\bnot responsive\b', r'\bnot helpful\b',
+        r'\bnot useful\b', r'\bnot reliable\b', r'\bnot secure\b',
+        r'\bnot fast\b', r'\bnot quick\b', r'\bnot efficient\b',
+        r'\bnot smooth\b', r'\bnot seamless\b', r'\bnot convenient\b',
+        
+        # Negative intensifiers
+        r'\bvery bad\b', r'\bvery slow\b', r'\bvery difficult\b', r'\bvery hard\b',
+        r'\bvery confusing\b', r'\bvery frustrating\b', r'\bvery annoying\b',
+        r'\bvery disappointing\b', r'\bvery poor\b', r'\bvery terrible\b',
+        r'\btoo slow\b', r'\btoo difficult\b', r'\btoo hard\b', r'\btoo confusing\b',
+        r'\btoo complicated\b', r'\btoo expensive\b', r'\btoo much\b',
+        r'\bextremely slow\b', r'\bextremely difficult\b', r'\bextremely bad\b',
+        r'\bpainfully slow\b', r'\bunbearably slow\b', r'\bintolerably slow\b'
+    ]
+    
+    positive_phrases = [
+        # App functionality
+        r'\bapp works perfectly\b', r'\bapp works well\b', r'\bapp working well\b',
+        r'\bapp functions well\b', r'\bapp never crashes\b', r'\bapp loads quickly\b',
+        r'\bapp loads fast\b', r'\bapp is fast\b', r'\bapp is quick\b',
+        r'\bapp opens quickly\b', r'\bapp starts quickly\b', r'\bapp responds quickly\b',
+        r'\bapp is stable\b', r'\bapp is reliable\b', r'\bapp is smooth\b',
+        
+        # Account access
+        r'\baccount opening easy\b', r'\beasy to open account\b', r'\baccount setup easy\b',
+        r'\beasy account setup\b', r'\bquick account setup\b', r'\baccount access easy\b',
+        r'\blogin works perfectly\b', r'\blogin works every time\b', r'\beasy to login\b',
+        r'\bquick login\b', r'\bfast login\b', r'\bsign in works\b',
+        r'\beasy to sign in\b', r'\bauthentication works\b', r'\bsecure login\b',
+        
+        # Verification success
+        r'\bverification process smooth\b', r'\bverification completed quickly\b',
+        r'\bverification works\b', r'\beasy verification\b', r'\bquick verification\b',
+        r'\bFace ID works perfectly\b', r'\bFace ID works\b', r'\bFace ID is great\b',
+        r'\bid verification easy\b', r'\bid scanning works\b', r'\beasy id scan\b',
+        r'\bquick id verification\b', r'\bsmooth verification\b', r'\bverification smooth\b',
+        
+        # Transaction success
+        r'\btransfer money instantly\b', r'\btransfer works\b', r'\btransfer successful\b',
+        r'\bpayment processed quickly\b', r'\bpayment successful\b', r'\btransaction successful\b',
+        r'\beasy to transfer\b', r'\bquick transfer\b', r'\bfast transfer\b',
+        r'\beasy to send money\b', r'\bquick payment\b', r'\bfast payment\b',
+        
+        # Customer service
+        r'\bcustomer service helpful\b', r'\bsupport team responsive\b', r'\bquick response from support\b',
+        r'\bcustomer service great\b', r'\bexcellent customer service\b', r'\bamazing customer service\b',
+        r'\bsupport helpful\b', r'\bhelpful support\b', r'\bresponsive support\b',
+        r'\bquick support\b', r'\bfast support\b', r'\bgood customer service\b',
+        
+        # User experience
+        r'\buser friendly\b', r'\beasy to use\b', r'\bsimple to use\b', r'\bintuitive interface\b',
+        r'\beasy to navigate\b', r'\bsimple to navigate\b', r'\bintuitive navigation\b',
+        r'\buser interface good\b', r'\bui is good\b', r'\binterface is good\b',
+        r'\binterface intuitive\b', r'\beasy interface\b', r'\bsimple interface\b',
+        r'\bclean interface\b', r'\bmodern interface\b', r'\bprofessional interface\b',
+        
+        # Positive experiences
+        r'\bgood experience\b', r'\bexcellent experience\b', r'\bgreat experience\b',
+        r'\bamazing experience\b', r'\bwonderful experience\b', r'\bfantastic experience\b',
+        r'\boutstanding experience\b', r'\bsmooth experience\b', r'\bseamless experience\b',
+        r'\bpleasant experience\b', r'\benjoyable experience\b', r'\bsatisfying experience\b',
+        
+        # Specific positive phrases
+        r'\bbest app\b', r'\bgreat app\b', r'\bexcellent app\b', r'\bamazing app\b',
+        r'\bwonderful app\b', r'\bfantastic app\b', r'\boutstanding app\b',
+        r'\bno hidden fees\b', r'\bno fees\b', r'\bfree transfers\b',
+        r'\bcompetitive rates\b', r'\bgood rates\b', r'\bfair rates\b',
+        r'\bgenerous limits\b', r'\bhigh limits\b', r'\bgood limits\b',
+        
+        # Positive features
+        r'\bvirtual card works\b', r'\bphysical card received\b', r'\bcard activation easy\b',
+        r'\bATM withdrawal works\b', r'\boverseas usage works\b', r'\bcontactless payment works\b',
+        r'\bApple Pay integration\b', r'\bGoogle Pay works\b', r'\bSamsung Pay supported\b',
+        r'\bautomatic bill payment\b', r'\brecurring payment setup\b', r'\bscheduled transfer works\b',
+        r'\bstanding order created\b', r'\bdirect debit setup\b', r'\bautomatic savings\b',
+        r'\bround up feature\b', r'\bsavings goal tracking\b', r'\bbudget management tools\b',
+        r'\bspending analysis\b', r'\btransaction categorization\b', r'\bexpense tracking\b',
+        r'\bmonthly statement\b', r'\btransaction history\b', r'\baccount balance check\b',
+        r'\binterest earned\b', r'\bcashback rewards\b', r'\bpoints earned\b',
+        r'\bpromotional offers\b', r'\bwelcome bonus\b', r'\breferral rewards\b',
+        
+        # Positive modifiers
+        r'\bvery good\b', r'\bvery fast\b', r'\bvery easy\b', r'\bvery smooth\b',
+        r'\bvery reliable\b', r'\bvery secure\b', r'\bvery helpful\b',
+        r'\bvery responsive\b', r'\bvery efficient\b', r'\bvery convenient\b',
+        r'\bsuper fast\b', r'\bsuper easy\b', r'\bsuper smooth\b', r'\bsuper reliable\b',
+        r'\bextremely fast\b', r'\bextremely easy\b', r'\bextremely good\b',
+        r'\blightning fast\b', r'\bultra fast\b', r'\binstant\b', r'\bimmediate\b',
+        
+        # Positive intensifiers
+        r'\bso good\b', r'\bso easy\b', r'\bso fast\b', r'\bso smooth\b',
+        r'\bso reliable\b', r'\bso helpful\b', r'\bso convenient\b',
+        r'\breally good\b', r'\breally easy\b', r'\breally fast\b',
+        r'\breally smooth\b', r'\breally reliable\b', r'\breally helpful\b',
+        r'\babsolutely great\b', r'\babsolutely amazing\b', r'\babsolutely perfect\b'
+    ]
+    
+    # Choose the appropriate phrase list based on sentiment
+    if sentiment == 'negative':
+        target_phrases = negative_phrases
+    elif sentiment == 'positive':
+        target_phrases = positive_phrases
+    else:
+        # For neutral, use a mix but be more conservative
+        target_phrases = negative_phrases + positive_phrases
+    
+    text_lower = text.lower()
+    phrase_counts = {}
+    
+    # Find exact phrase matches
+    for phrase_pattern in target_phrases:
+        matches = re.findall(phrase_pattern, text_lower)
+        for match in matches:
+            if match in phrase_counts:
+                phrase_counts[match] += 1
+            else:
+                phrase_counts[match] = 1
+    
+    # Also extract context-aware phrases (check for negation)
+    sentences = re.split(r'[.!?]+', text_lower)
+    
+    for sentence in sentences:
+        words = sentence.strip().split()
+        if len(words) < 3:
+            continue
+        
+        # Check for negation patterns
+        negation_words = ['not', 'no', 'never', 'none', 'neither', 'nor', 'doesn\'t', 'doesn\'t', 'don\'t', 'can\'t', 'cannot', 'unable', 'failed', 'failed to', 'unable to', 'couldn\'t', 'wouldn\'t', 'shouldn\'t', 'isn\'t', 'aren\'t', 'wasn\'t', 'weren\'t', 'hasn\'t', 'haven\'t', 'hadn\'t']
+        
+        has_negation = any(neg in sentence for neg in negation_words)
+        
+        # Extract 2-4 word phrases
+        for start in range(len(words)):
+            for length in range(2, 5):  # 2 to 4 words
+                if start + length <= len(words):
+                    phrase_words = words[start:start + length]
+                    phrase = ' '.join(phrase_words)
+                    
+                    # For negative sentiment, prioritize phrases with negation or negative context
+                    if sentiment == 'negative':
+                        if has_negation or any(word in phrase for word in ['bad', 'terrible', 'awful', 'horrible', 'worst', 'failed', 'error', 'problem', 'issue', 'crash', 'slow', 'difficult', 'hard', 'confusing', 'frustrating', 'annoying', 'disappointing']):
+                            if phrase in phrase_counts:
+                                phrase_counts[phrase] += 1
+                            else:
+                                phrase_counts[phrase] = 1
+                    
+                    # For positive sentiment, avoid phrases with negation
+                    elif sentiment == 'positive':
+                        if not has_negation and any(word in phrase for word in ['good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'perfect', 'easy', 'fast', 'quick', 'smooth', 'reliable', 'helpful', 'convenient', 'works', 'working', 'successful']):
+                            if phrase in phrase_counts:
+                                phrase_counts[phrase] += 1
+                            else:
+                                phrase_counts[phrase] = 1
+    
+    return phrase_counts
+
+def create_custom_wordcloud(text: str, color_func, output_file: str, title: str = "", config: dict = None, sentiment: str = "neutral"):
+    """Create wordcloud with phrases using spaces, no underscores, with DeepSeek optimization and sentiment awareness"""
+    
+    # Extract sentiment-aware phrases
+    phrase_counts = extract_sentiment_aware_phrases(text, sentiment)
     
     # Filter out very low frequency phrases and very long phrases
     filtered_phrases = {}
@@ -725,7 +1038,35 @@ def create_custom_wordcloud(text: str, color_func, output_file: str, title: str 
         if count >= 1 and len(phrase) <= 30:  # Only phrases that appear at least once and aren't too long
             filtered_phrases[phrase] = count
     
-    print(f"📝 Found phrases: {list(filtered_phrases.keys())[:10]}")
+    print(f"📝 Found {len(filtered_phrases)} phrases before optimization")
+    
+    # Use DeepSeek to optimize phrases if config is provided
+    if config and config.get('deepseek', {}).get('enabled', False):
+        # Convert phrase counts to text for DeepSeek processing
+        phrases_text = ' '.join([phrase for phrase, count in filtered_phrases.items() for _ in range(count)])
+        
+        print("🤖 Using DeepSeek to optimize phrases...")
+        optimized_phrases_text = call_deepseek_for_phrase_optimization(phrases_text, config)
+        
+        # Convert optimized text back to phrase counts
+        optimized_phrases = optimized_phrases_text.split()
+        optimized_phrase_counts = {}
+        
+        for phrase in optimized_phrases:
+            if len(phrase) >= 3 and len(phrase) <= 50:  # Reasonable phrase length
+                if phrase in optimized_phrase_counts:
+                    optimized_phrase_counts[phrase] += 1
+                else:
+                    optimized_phrase_counts[phrase] = 1
+        
+        # Use optimized phrases if we got meaningful results
+        if len(optimized_phrase_counts) >= 10:  # At least 10 unique phrases
+            filtered_phrases = optimized_phrase_counts
+            print(f"✅ DeepSeek optimized to {len(filtered_phrases)} unique phrases")
+        else:
+            print("⚠️ DeepSeek optimization didn't produce enough phrases, using original")
+    
+    print(f"📝 Final phrases: {list(filtered_phrases.keys())[:10]}")
     
     # Create wordcloud with the phrases
     wordcloud = WordCloud(
@@ -772,7 +1113,9 @@ def create_wordclouds(df: pd.DataFrame, app_key: str, output_dir: str, config: d
                 wordcloud_text,
                 lambda *args, **kwargs: (0, 184, 245),  # Pacific Blue
                 positive_wordcloud_file,
-                f"{app_key} Positive Reviews"
+                f"{app_key} Positive Reviews",
+                config,
+                "positive"
             )
         
         # Negative reviews word cloud
@@ -790,7 +1133,9 @@ def create_wordclouds(df: pd.DataFrame, app_key: str, output_dir: str, config: d
                 wordcloud_text,
                 lambda *args, **kwargs: (12, 35, 60),  # Dark Blue
                 negative_wordcloud_file,
-                f"{app_key} Negative Reviews"
+                f"{app_key} Negative Reviews",
+                config,
+                "negative"
             )
             
     except Exception as e:

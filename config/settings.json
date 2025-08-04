@@ -75,14 +75,14 @@
   },
   "deepseek": {
     "enabled": true,
-    "api_key": "sk-1ccd242abedd4972a3bab56e67c16094",
+    "api_key": "sk-013e00392a7d433b8d1d09d88bc0b62e",
     "base_url": "https://api.deepseek.com/v1",
     "model": "deepseek-chat",
     "max_tokens": 1000,
     "temperature": 0.3,
     "wordcloud_prompt": "Extract the most important 2-4 word phrases from these banking app reviews. Focus on banking terms, user experience issues, features, and sentiment. Each phrase must be exactly 2-4 words and be human-readable. Examples: 'app crashes', 'customer service', 'account opening', 'transfer money', 'login problems', 'Face ID', 'verification process', 'poor service', 'good experience'. Remove repetitive phrases like 'a lot', 'lot of', 'a lot of'. Return only the phrases separated by spaces, no explanations or punctuation. Reviews: {reviews}",
     "sentiment_prompt": "Analyze the sentiment of the following banking app review. Return only a JSON object with 'sentiment' (positive/negative/neutral), 'score' (0.0 to 1.0), and 'confidence' (0.0 to 1.0). Review: {review}",
-    "enable_wordcloud_only_for": ["welab_bank"],
+    "enable_wordcloud_only_for": ["welab_bank", "mox_bank"],
     "enable_sentiment_for_all": true
   }
 } 
