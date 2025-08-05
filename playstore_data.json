@@ -1,0 +1,58 @@
+[
+  {
+    "bank": "ZA Bank",
+    "package_name": "com.zabank.mobile",
+    "rating": 0,
+    "review_count": 0,
+    "url": "https://play.google.com/store/apps/details?id=com.zabank.mobile&hl=en&gl=HK"
+  },
+  {
+    "bank": "WeLab Bank",
+    "package_name": "com.welabbank.mobile",
+    "rating": 0,
+    "review_count": 0,
+    "url": "https://play.google.com/store/apps/details?id=com.welabbank.mobile&hl=en&gl=HK"
+  },
+  {
+    "bank": "Fusion Bank",
+    "package_name": "com.fusionbank.mobile",
+    "rating": 0,
+    "review_count": 0,
+    "url": "https://play.google.com/store/apps/details?id=com.fusionbank.mobile&hl=en&gl=HK"
+  },
+  {
+    "bank": "Mox Bank",
+    "package_name": "com.moxbank.mobile",
+    "rating": 0,
+    "review_count": 0,
+    "url": "https://play.google.com/store/apps/details?id=com.moxbank.mobile&hl=en&gl=HK"
+  },
+  {
+    "bank": "livi Bank",
+    "package_name": "com.livibank.mobile",
+    "rating": 0,
+    "review_count": 0,
+    "url": "https://play.google.com/store/apps/details?id=com.livibank.mobile&hl=en&gl=HK"
+  },
+  {
+    "bank": "PAO Bank",
+    "package_name": "com.paobank.mobile",
+    "rating": 0,
+    "review_count": 0,
+    "url": "https://play.google.com/store/apps/details?id=com.paobank.mobile&hl=en&gl=HK"
+  },
+  {
+    "bank": "Ant Bank",
+    "package_name": "com.antbank.mobile",
+    "rating": 0,
+    "review_count": 0,
+    "url": "https://play.google.com/store/apps/details?id=com.antbank.mobile&hl=en&gl=HK"
+  },
+  {
+    "bank": "Airstar Bank",
+    "package_name": "com.airstarbank.mobile",
+    "rating": 0,
+    "review_count": 0,
+    "url": "https://play.google.com/store/apps/details?id=com.airstarbank.mobile&hl=en&gl=HK"
+  }
+]

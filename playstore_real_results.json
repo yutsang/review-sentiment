@@ -1,0 +1,50 @@
+{
+  "PAO Bank": {
+    "package": "com.paobank.mobilebank.personal",
+    "name": "No data",
+    "reviews": 0,
+    "rating": 0.0
+  },
+  "Ant Bank": {
+    "package": "com.hk.ios.phone.portal",
+    "name": "Error",
+    "reviews": 0,
+    "rating": 0.0
+  },
+  "Airstar Bank": {
+    "package": "com.airstarbank.mobilebanking",
+    "name": "No data",
+    "reviews": 0,
+    "rating": 0.0
+  },
+  "Fusion Bank": {
+    "package": "com.fusionbank.vb",
+    "name": "No data",
+    "reviews": 0,
+    "rating": 0.0
+  },
+  "livi Bank": {
+    "package": "com.livibank.hk",
+    "name": "No data",
+    "reviews": 0,
+    "rating": 0.0
+  },
+  "WeLab Bank": {
+    "package": "welab.bank",
+    "name": "No data",
+    "reviews": 0,
+    "rating": 0.0
+  },
+  "ZA Bank": {
+    "package": "com.zhongan.ibank",
+    "name": "No data",
+    "reviews": 0,
+    "rating": 0.0
+  },
+  "Mox Bank": {
+    "package": "com.mox.app",
+    "name": "No data",
+    "reviews": 0,
+    "rating": 0.0
+  }
+}

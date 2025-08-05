@@ -1,0 +1,111 @@
+🏦 THREE BANKS - CATEGORY ANALYSIS SUMMARY
+================================================================================
+
+🏦 WELAB BANK
+================================================================================
+
+📂 Onboarding & Verification
+--------------------------------------------------
+Total Reviews: 181
+Negative Reviews: 161 (51.3% of total negative)
+Average Rating: 1.47/5.0
+Example Negative Comments:
+  1. "Verify by asking for a phone number from over 20 years ago. Waste of time."
+  2. "Retarded app. Cant go further than the “tax information” section during the identity verification. It..."
+  3. "It’s already 2 weeks after registering the account but it’s still not ready yet. No..."
+
+📂 Platform Performance & Reliability
+--------------------------------------------------
+Total Reviews: 110
+Negative Reviews: 38 (12.1% of total negative)
+Average Rating: 2.40/5.0
+Example Negative Comments:
+  1. "Do more testing before the update goes live, too many bugs will scare away all..."
+  2. "The app is stopped at the opening animation. Can’t use.!!!!"
+  3. "Occasionally opening the app makes my phone crash. Every time I have to restart it."
+
+📂 Accounts & Interest Terms
+--------------------------------------------------
+Total Reviews: 16
+Negative Reviews: 10 (3.2% of total negative)
+Average Rating: 2.44/5.0
+Example Negative Comments:
+  1. "Straight up won't let you log in"
+  2. "Mentioned that ~1.5% of interest for loans, in the end offered me around 10% of..."
+  3. "Never open an account with trash. They will cancel your account for no reason, trash."
+
+
+================================================================================
+
+🏦 MOX BANK
+================================================================================
+
+📂 Promotion & Fees
+--------------------------------------------------
+Total Reviews: 37
+Negative Reviews: 19 (3.5% of total negative)
+Average Rating: 2.89/5.0
+Example Negative Comments:
+  1. "Awful experience. Unreasonable fee charges that was not disclose when I open the account. Just..."
+  2. "0.75% fee charged by a bank for FX transaction?! Am I really living in HK?"
+  3. "I refer my friend but the referral bunos that send to me is 100 only"
+
+📂 Security & Privacy
+--------------------------------------------------
+Total Reviews: 38
+Negative Reviews: 28 (5.2% of total negative)
+Average Rating: 2.13/5.0
+Example Negative Comments:
+  1. "you should not show card number and expiry date and cvc on the same page."
+  2. "Why on earth do I need to share my personal contacts with mox to use..."
+  3. "It truly feels like this virtual bank is trying to keep my money away from..."
+
+📂 Accounts & Interest Terms
+--------------------------------------------------
+Total Reviews: 51
+Negative Reviews: 36 (6.7% of total negative)
+Average Rating: 2.27/5.0
+Example Negative Comments:
+  1. "Account opening is fast and easy. Getting your money in is also easy. Almost impossible..."
+  2. "Easy to use but the great interests rates that pulled me in only lasted 3..."
+  3. "Absolutely misleading advertising Sell interest rate at 5+% Actually it is 3% baseline interest after..."
+
+
+================================================================================
+
+🏦 ZA BANK
+================================================================================
+
+📂 Onboarding & Verification
+--------------------------------------------------
+Total Reviews: 150
+Negative Reviews: 118 (23.1% of total negative)
+Average Rating: 2.10/5.0
+Example Negative Comments:
+  1. "Regarding this title, I'll just say one thing. Without a Hong Kong ID card, it's..."
+  2. "Had the app for several years. Haven’t log on for a few months and all..."
+  3. "i haven't closed account yet but only leave a small negligible sum, today i tried..."
+
+📂 Interface & Functionality
+--------------------------------------------------
+Total Reviews: 350
+Negative Reviews: 163 (32.0% of total negative)
+Average Rating: 3.36/5.0
+Example Negative Comments:
+  1. "For some unknown reasons, I can not even try to use this app to check..."
+  2. "While chatting with online customer service, the Chinese keyboard disappeared, and the Chinese input method..."
+  3. "When scanning the portrait side of the mainland ID card, the app crashes. Please fix..."
+
+📂 Transactions & Payments
+--------------------------------------------------
+Total Reviews: 55
+Negative Reviews: 26 (5.1% of total negative)
+Average Rating: 3.35/5.0
+Example Negative Comments:
+  1. "This garbage feature, the first overseas transfer failed, and it took three months to get..."
+  2. "The worse bank i ever use in hongkong ..better not use this digibank,especially when u..."
+  3. "Awful experience with confirming payments through the app. If you are using the app in..."
+
+
+================================================================================
+

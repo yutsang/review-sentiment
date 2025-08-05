@@ -1,0 +1,69 @@
+🏦 WELAB BANK - 4 CATEGORIES ANALYSIS SUMMARY
+================================================================================
+
+📂 Onboarding & Verification
+--------------------------------------------------
+Total Reviews: 181
+Positive Reviews: 15 (8.3%)
+Negative Reviews: 161 (89.0%)
+Neutral Reviews: 5 (2.8%)
+Average Rating: 1.47/5.0
+Average Sentiment Score: -0.403
+
+UNDERLYING PROBLEMS (mainly from negative reviews):
+• ID card recognition problems (41 mentions)
+• Phone number verification issues (26 mentions)
+• Account creation difficulties (6 mentions)
+• Face ID verification issues (1 mentions)
+
+================================================================================
+
+📂 Platform Performance & Reliability
+--------------------------------------------------
+Total Reviews: 110
+Positive Reviews: 20 (18.2%)
+Negative Reviews: 38 (34.5%)
+Neutral Reviews: 52 (47.3%)
+Average Rating: 2.40/5.0
+Average Sentiment Score: -0.082
+
+UNDERLYING PROBLEMS (mainly from negative reviews):
+• Update-related issues (4 mentions)
+• System bugs and errors (3 mentions)
+• App crashes frequently (3 mentions)
+• Slow performance and loading (1 mentions)
+
+================================================================================
+
+📂 Accounts & Interest Terms
+--------------------------------------------------
+Total Reviews: 16
+Positive Reviews: 6 (37.5%)
+Negative Reviews: 10 (62.5%)
+Neutral Reviews: 0 (0.0%)
+Average Rating: 2.44/5.0
+Average Sentiment Score: -0.125
+
+UNDERLYING PROBLEMS (mainly from negative reviews):
+• Account locking/cancellation issues (3 mentions)
+• Interest rate issues (2 mentions)
+• Loan-related problems (1 mentions)
+
+================================================================================
+
+📂 Interface & Functionality
+--------------------------------------------------
+Total Reviews: 102
+Positive Reviews: 32 (31.4%)
+Negative Reviews: 63 (61.8%)
+Neutral Reviews: 7 (6.9%)
+Average Rating: 2.52/5.0
+Average Sentiment Score: -0.152
+
+UNDERLYING PROBLEMS (mainly from negative reviews):
+• Poor user interface (6 mentions)
+• Missing or broken features (4 mentions)
+• Poor design and layout (3 mentions)
+
+================================================================================
+
