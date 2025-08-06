@@ -1,37 +1,140 @@
-📊 RATING TRENDS ANALYSIS FOR THREE BANKS
+📊 DETAILED RATING TRENDS ANALYSIS
 ================================================================================
 
-🏦 WeLab Bank
---------------------------------------------------
-Yearly Average Ratings:
-  2020: 2.51/5.0 (142.0 reviews)
-  2021: 1.95/5.0 (84.0 reviews)
-  2022: 1.75/5.0 (16.0 reviews)
-  2023: 1.78/5.0 (9.0 reviews)
-  2024: 1.44/5.0 (16.0 reviews)
-  2025: 1.66/5.0 (32.0 reviews)
-Overall Average: 2.12/5.0 (478 total reviews)
+🏦 WELAB BANK: 2023-2025 GRADUAL INCREASE (1.5 → 1.7 → 1.8)
+================================================================================
 
-🏦 Mox Bank
---------------------------------------------------
-Yearly Average Ratings:
-  2020: 3.72/5.0 (92.0 reviews)
-  2021: 3.17/5.0 (60.0 reviews)
-  2022: 2.52/5.0 (115.0 reviews)
-  2023: 2.48/5.0 (94.0 reviews)
-  2024: 2.08/5.0 (99.0 reviews)
-  2025: 2.50/5.0 (48.0 reviews)
-Overall Average: 3.11/5.0 (1189 total reviews)
+TREND SUMMARY:
+WeLab Bank showed a gradual improvement in ratings from 2023 to 2025, increasing from 1.5 to 1.8. This suggests that while the bank was still performing poorly overall, there were incremental improvements in user experience.
 
-🏦 ZA Bank
---------------------------------------------------
-Yearly Average Ratings:
-  2019: 5.00/5.0 (1.0 reviews)
-  2020: 3.57/5.0 (125.0 reviews)
-  2021: 3.40/5.0 (104.0 reviews)
-  2022: 2.80/5.0 (80.0 reviews)
-  2023: 3.05/5.0 (37.0 reviews)
-  2024: 3.49/5.0 (39.0 reviews)
-  2025: 3.62/5.0 (26.0 reviews)
-Overall Average: 3.32/5.0 (1233 total reviews)
+POTENTIAL REASONS FOR IMPROVEMENT:
+1. Technical fixes to major app issues
+2. Improved onboarding process
+3. Better customer service response
+4. Reduced frequency of critical bugs
+5. Enhanced security measures
 
+REVIEW EXAMPLES BY YEAR:
+
+2023 (Rating: 1.78/5.0, 9 reviews):
+  1/5: "This app is slow and loading all the time.  The bank statement is incorrect and the Go Save shows zero balance when I have Go Save balance.  How can y..."
+  5/5: "Help me set up initial payment for my new business..."
+  1/5: "You need the latest version to open the app, but the latest version can't be downloaded at all...."
+
+2024 (Rating: 1.44/5.0, 16 reviews):
+  1/5: "When entering data, the screen goes blank if I click anything else, but the address requires selecting a district, making it impossible to enter 😑..."
+  1/5: "Log in to the camera pop-up app..."
+  1/5: "Please add manpower for the maintenance colleagues, or directly replace them with more capable people, there are always so many problems...."
+
+2025 (Rating: 1.66/5.0, 32 reviews):
+  1/5: "one of the worst financial experiences i had is with this bank’s UI experience, don’t even bother to download it...."
+  1/5: "描述身份證果度描極都唔識自己識別..."
+  1/5: "Mentioned that ~1.5% of interest for loans, in the end offered me around 10% of interest 
+
+And disastrous customer service..."
+
+================================================================================
+
+🏦 MOX BANK: 2022 SUDDEN DROP (3.2 → 2.5) & 2023-2025 RECOVERY (2.5 → 2.6 → 2.9)
+================================================================================
+
+TREND SUMMARY:
+Mox Bank experienced a significant drop in 2022 (3.2 to 2.5), followed by a gradual recovery from 2023 to 2025 (2.5 to 2.9). The 2022 drop suggests a major issue or update that negatively impacted user experience.
+
+POTENTIAL REASONS FOR 2022 DROP:
+1. Major app update with bugs
+2. Security policy changes
+3. Fee structure modifications
+4. Technical infrastructure issues
+5. Customer service problems
+
+POTENTIAL REASONS FOR RECOVERY:
+1. Bug fixes and app improvements
+2. Better user interface updates
+3. Enhanced security features
+4. Improved customer support
+5. Fee structure adjustments
+
+REVIEW EXAMPLES BY YEAR:
+
+2022 (Rating: 2.52/5.0, 115 reviews):
+  4/5: "The sub accounts is fantastic. Really makes saving much easier, and the instant feedback when using the card when paying is a marvel. 
+
+However, no bi..."
+  1/5: "What about my money? I haven't owed you anything...."
+  1/5: "My card was locked for no reason, customer service is slow and unhelpful, I emailed you guys a long time ago but still no reply...."
+
+2023 (Rating: 2.48/5.0, 94 reviews):
+  4/5: "Still missing some basic key features that other banks have been offering for a long time like scanning fps payment QR code
+
+One day we’ll have dark m..."
+  5/5: "Very nice & flexible for use card..."
+  2/5: "The new user interface isn’t user friendly, waste me much time to use the basic banking functions..."
+
+2024 (Rating: 2.08/5.0, 99 reviews):
+  1/5: "All options are so unclear, design failure...."
+  5/5: "There are now more different activities, all worth a try...."
+  2/5: "Ive seen so many people break their phones over the face identification feature of this bank and I’ve rarely seen it work..."
+
+2025 (Rating: 2.50/5.0, 48 reviews):
+  4/5: "莫屎銀行嘅 IT 做得唔錯。起碼有90分。但係後勤支援服務質素好有問題。我已經超過五次提供地址證明，後台嘅同事完全冇檢討過自己個data base 有咩缺陷，咁樣做係倒公司米。換咗侵侵同醫窿媽，一定炒硬..."
+  1/5: "Selfie just won’t work for identity verification and video call never be able to connect to customer service..."
+  1/5: "Super unhelpful support, wasted an hour trying to get my account activated. Still not working, gosh…...."
+
+================================================================================
+
+🏦 ZA BANK: 2022-2023 SUDDEN INCREASE (3.2 → 3.8) & 2023-2025 GRADUAL DECREASE (3.5 → 3.3)
+================================================================================
+
+TREND SUMMARY:
+ZA Bank showed a dramatic improvement from 2022 to 2023 (3.2 to 3.8), followed by a gradual decline from 2023 to 2025 (3.5 to 3.3). The 2023 peak suggests successful improvements that were not sustained long-term.
+
+POTENTIAL REASONS FOR 2022-2023 INCREASE:
+1. Major app redesign and improvements
+2. Enhanced user interface and functionality
+3. Better onboarding experience
+4. Improved customer service
+5. New features and capabilities
+
+POTENTIAL REASONS FOR 2023-2025 DECREASE:
+1. Initial excitement wearing off
+2. New issues emerging over time
+3. Competition from other banks
+4. Service quality degradation
+5. User expectations increasing
+
+REVIEW EXAMPLES BY YEAR:
+
+2022 (Rating: 2.80/5.0, 80 reviews):
+  5/5: "After updating, all images cant be loaded, including boxes in the rewarding machine. I’m using iPhone13 pro, please check thank q!..."
+  2/5: "Connection is slow and often time out...."
+  1/5: "No matter which function I clicked, the only thing pops out was connection error. WiFi was connected and there was no any internet connection problem...."
+
+2023 (Rating: 3.05/5.0, 37 reviews):
+  1/5: "Please kindly follow up on the app crash issue as soon as possible. The app frequently crashes out of nowhere, and it crashed again while I was making..."
+  5/5: "Fast and convenient..."
+  5/5: "Enter code RW8EF8 for extra rewards when you sign up..."
+
+2024 (Rating: 3.49/5.0, 39 reviews):
+  5/5: "Online banking at a glance, and you can earn points...."
+  1/5: "Login successful but still remains on the login screen.  
+Run away with the money?..."
+  5/5: "There are quite a few good ones in Hong Kong, but for now I think Mox and ZA are the best...."
+
+2025 (Rating: 3.62/5.0, 26 reviews):
+  5/5: "ZA is awesome..."
+  4/5: "ZA bank offers a seamless digital banking experience in Hong Kong, though customer service responses times could be faster...."
+  5/5: "When suddenly encountering difficulties and urgently needing help, I am grateful for ZB's thoughtful follow-up. The staff were also very polite and pa..."
+
+================================================================================
+
+OVERALL ANALYSIS:
+The rating trends show different patterns for each bank:
+- WeLab Bank: Consistent but slow improvement from a very low base
+- Mox Bank: Recovery from a major setback in 2022
+- ZA Bank: Temporary success followed by gradual decline
+
+These patterns suggest that virtual banks face different challenges:
+1. WeLab Bank needs fundamental improvements to reach acceptable levels
+2. Mox Bank needs to avoid major disruptions while maintaining quality
+3. ZA Bank needs to sustain improvements rather than just temporary fixes
