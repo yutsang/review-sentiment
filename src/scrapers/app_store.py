@@ -1,146 +1,132 @@
 """
-App Store scraper implementation
+App Store scraper using the iTunes MZStore JSON API.
+
+The old RSS feed returns only ~2 reviews per page (max ~10 total).
+This implementation uses the private-but-stable MZStore API which returns
+up to 500 reviews per request and supports full pagination.
 """
+import time
 import requests
-import xml.etree.ElementTree as ET
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from .base import BaseScraper
 from ..models.review import Review
 
+# Apple storefront IDs (country code → storefront header value)
+_STOREFRONTS: Dict[str, str] = {
+    "hk": "143463-18,30",
+    "us": "143441-1,29",
+    "gb": "143444-2,29",
+    "au": "143460-27,29",
+    "sg": "143464-19,29",
+    "tw": "143470-21,29",
+}
+
+# MZStore sort codes
+_SORT_CODES: Dict[str, int] = {
+    "mostRecent": 4,
+    "mostHelpful": 1,
+}
+
+_PAGE_SIZE = 500  # max reviews per request the API supports
+_API_URL = (
+    "https://itunes.apple.com/WebObjects/MZStore.woa/wa/userReviewsRow"
+    "?id={app_id}&displayable-kind=11&startIndex={start}&endIndex={end}&sort={sort}"
+)
+
 
 class AppStoreScraper(BaseScraper):
-    """App Store review scraper"""
-    
+    """App Store review scraper using the iTunes MZStore JSON API."""
+
     @property
     def platform_name(self) -> str:
         return "app_store"
-    
+
     def __init__(self, config: Dict[str, Any], app_config: Dict[str, Any]):
         super().__init__(config, app_config)
-        
-        # Get App Store specific config
         self.app_store_config = app_config.get("app_store", {})
         self.app_id = self.app_store_config.get("app_id")
-        
         if not self.app_id:
-            raise ValueError("App Store app_id is required in app configuration")
-        
-        # Setup session
+            raise ValueError("app_store.app_id is required in app configuration")
+
         self.session = requests.Session()
-        self.base_url = self.config.get("app_store", {}).get("base_url", "https://itunes.apple.com")
-        user_agent = self.config.get("app_store", {}).get("user_agent", 
-                                   "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15")
-        self.session.headers.update({'User-Agent': user_agent})
-    
+        self.session.headers.update({
+            "User-Agent": "iTunes/12.0 (Macintosh; OS X 10.15)",
+        })
+
     def scrape_reviews(self) -> List[Review]:
-        """Scrape all App Store reviews"""
+        """Scrape all App Store reviews across configured countries and sort methods."""
         if not self.app_store_config.get("enabled", True):
-            self.logger.info("App Store scraping disabled in configuration")
+            self.logger.info("App Store scraping disabled")
             return []
-        
-        self.logger.info(f"🍎 Starting App Store scraping for app ID: {self.app_id}")
-        
-        all_reviews = []
-        countries = self.app_store_config.get("countries", ["us"])
+
+        self.logger.info(f"Starting App Store scraping for app ID: {self.app_id}")
+
+        all_reviews: List[Review] = []
+        countries = self.app_store_config.get("countries", ["hk"])
         sort_methods = self.app_store_config.get("sort_methods", ["mostRecent"])
-        
+
         for country in countries:
-            self.logger.info(f"Scraping country: {country}")
-            
-            for sort_method in sort_methods:
-                sort_name = sort_method if sort_method else "Default Sort"
-                self.logger.info(f"Sorting by: {sort_name}")
-                
-                page_reviews = self._scrape_sort_method(country, sort_method)
-                new_reviews = 0
-                
-                for review in page_reviews:
-                    if self.add_review(review):
-                        all_reviews.append(review)
-                        new_reviews += 1
-                
-                self.logger.info(f"Added {new_reviews} new reviews for {sort_name}")
+            storefront = _STOREFRONTS.get(country, _STOREFRONTS["hk"])
+            self.session.headers["X-Apple-Store-Front"] = f"{storefront} t:native"
+
+            for sort_name in sort_methods:
+                sort_code = _SORT_CODES.get(sort_name, 4)
+                self.logger.info(f"  Fetching country={country} sort={sort_name}")
+                batch = self._fetch_all(sort_code)
+                added = sum(1 for r in batch if self.add_review(r) and all_reviews.append(r) is None)
+                self.logger.info(f"  Added {added} new reviews (sort={sort_name})")
                 self.rate_limit("between_sort_methods")
-            
+
             self.rate_limit("between_countries")
-        
-        self.logger.info(f"🍎 Total unique App Store reviews collected: {len(all_reviews)}")
+
+        self.logger.info(f"App Store total unique reviews: {len(all_reviews)}")
         return self.validate_reviews(all_reviews)
-    
-    def _scrape_sort_method(self, country: str, sort_method: str) -> List[Review]:
-        """Scrape reviews for a specific sort method"""
-        reviews = []
-        
-        # Remove max_pages limit - get all available pages
-        page = 1
+
+    def _fetch_all(self, sort_code: int) -> List[Review]:
+        """Paginate through MZStore API and return all Review objects."""
+        reviews: List[Review] = []
+        start = 0
+
         while True:
+            url = _API_URL.format(
+                app_id=self.app_id,
+                start=start,
+                end=start + _PAGE_SIZE - 1,
+                sort=sort_code,
+            )
             try:
-                page_reviews = self._get_reviews_page(page, sort_method, country)
-                
-                if not page_reviews:
-                    self.logger.debug(f"No reviews on page {page}")
+                resp = self.session.get(url, timeout=30)
+                if resp.status_code != 200:
+                    self.logger.warning(f"App Store API returned {resp.status_code}")
                     break
-                
-                reviews.extend(page_reviews)
-                self.logger.debug(f"Page {page}: {len(page_reviews)} reviews")
-                
-                # If we got fewer reviews than expected, we've reached the end
-                if len(page_reviews) < 50:  # App Store typically returns 50 reviews per page
+
+                batch_data = resp.json().get("userReviewList", [])
+                if not batch_data:
                     break
-                
-                page += 1
+
+                for item in batch_data:
+                    review = Review(
+                        platform="App Store",
+                        review_id=str(item.get("userReviewId", "")),
+                        title=item.get("title", ""),
+                        content=item.get("body", ""),
+                        rating=int(item.get("rating", 0)),
+                        author=item.get("name", "Anonymous"),
+                        date=item.get("date", ""),
+                        version="",
+                    )
+                    reviews.append(review)
+
+                self.logger.debug(f"Fetched {len(batch_data)} reviews (start={start})")
+
+                if len(batch_data) < _PAGE_SIZE:
+                    break  # last page
+
+                start += _PAGE_SIZE
                 self.rate_limit("between_requests")
-                
+
             except Exception as e:
-                self.logger.error(f"Error on page {page}: {e}")
+                self.logger.error(f"App Store fetch error at start={start}: {e}")
                 break
-        
+
         return reviews
-    
-    def _get_reviews_page(self, page: int, sort_by: str, country: str) -> List[Review]:
-        """Get reviews from a specific page"""
-        reviews = []
-        
-        # Try different RSS URL formats
-        rss_urls = [
-            f"{self.base_url}/rss/customerreviews/page={page}/id={self.app_id}/sortby={sort_by}/xml",
-            f"{self.base_url}/{country}/rss/customerreviews/page={page}/id={self.app_id}/sortby={sort_by}/xml",
-            f"{self.base_url}/rss/customerreviews/id={self.app_id}/page={page}/sortby={sort_by}/xml",
-            f"{self.base_url}/us/rss/customerreviews/page={page}/id={self.app_id}/sortby={sort_by}/xml"
-        ]
-        
-        for rss_url in rss_urls:
-            try:
-                self.logger.debug(f"Trying RSS URL: {rss_url}")
-                response = self.session.get(rss_url, timeout=30)
-                
-                if response.status_code == 200:
-                    root = ET.fromstring(response.content)
-                    entries = root.findall('.//{http://www.w3.org/2005/Atom}entry')
-                    
-                    self.logger.debug(f"Found {len(entries)} total entries in RSS feed")
-                    
-                    # Skip the first entry which is usually app information
-                    review_entries = entries[1:] if len(entries) > 1 else []
-                    
-                    if review_entries:
-                        for entry in review_entries:
-                            review = Review.from_app_store_entry(entry, "App Store")
-                            if review:
-                                reviews.append(review)
-                        
-                        self.logger.debug(f"RSS success: {rss_url} - {len(review_entries)} review entries")
-                        break
-                    else:
-                        self.logger.debug(f"RSS feed has no review entries: {rss_url}")
-                else:
-                    self.logger.debug(f"RSS URL returned status {response.status_code}: {rss_url}")
-                
-            except Exception as e:
-                self.logger.debug(f"RSS URL failed: {rss_url} - {e}")
-                continue
-        
-        if not reviews:
-            self.logger.warning(f"No reviews found for app ID {self.app_id} on page {page} with sort {sort_by}")
-        
-        return reviews 
