@@ -42,21 +42,32 @@ env/
 ehthumbs.db
 Thumbs.db
 
-# Project Specific
-#output/
+# Project Specific - Output
+output/
+
+# Project Specific - Logging
 logs/
-#*.xlsx
-*.csv
 *.log
 
-# API Keys and Sensitive Data
+# Project Specific - Generated analysis
+analysis/
+
+# Config with keys / secrets (use config/settings.example.json as template)
+config/settings.json
 config/settings_local.json
 config/settings_production.json
+config/*.local.json
+config/*.secret.json
+
+# API Keys and Sensitive Data
+.env
+.env.*
+!.env.example
 *.key
 *.pem
-.env.local
-.env.production
+*credentials*
+*secrets*
 
 # Temporary files
 *.tmp
-*.temp 
+*.temp

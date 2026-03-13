@@ -8,14 +8,20 @@ from pathlib import Path
 
 
 def load_config(config_path: str = "config/settings.json") -> Dict[str, Any]:
-    """Load general settings configuration"""
-    try:
-        with open(config_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        raise FileNotFoundError(f"Configuration file not found: {config_path}")
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON in configuration file: {e}")
+    """Load general settings configuration. Falls back to settings.example.json if settings.json not found."""
+    fallback = "config/settings.example.json"
+
+    for path in [config_path, fallback]:
+        if os.path.exists(path):
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON in configuration file: {e}")
+    raise FileNotFoundError(
+        f"Configuration file not found: {config_path}. "
+        f"Copy config/settings.example.json to config/settings.json and add your API key."
+    )
 
 
 def load_app_config(config_path: str = "config/apps.json") -> Dict[str, Any]:

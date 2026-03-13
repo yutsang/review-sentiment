@@ -11,7 +11,7 @@
     "chart_palette": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"],
     "sentiment_colors": {
       "positive": "#2ca02c",
-      "negative": "#d62728", 
+      "negative": "#d62728",
       "neutral": "#1f77b4"
     },
     "rating_colors": {
@@ -85,4 +85,4 @@
     "enable_wordcloud_only_for": ["welab_bank", "mox_bank", "za_bank"],
     "enable_sentiment_for_all": true
   }
-} 
+}

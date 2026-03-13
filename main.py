@@ -111,10 +111,12 @@ def analyze_sentiment_deepseek(text: str, config: Dict) -> Dict[str, Any]:
 
 
 def categorize_problem(text: str) -> str:
-    """Classify review into one of five problem categories."""
+    """Classify review into problem categories including customer-related issues."""
     if not text:
         return "General"
     t = text.lower()
+    if any(w in t for w in ["customer service", "customer support", "support", "help", "客服", "contact", "complaint", "complained", "agent", "representative", "hotline", "phone", "email support", "poor service", "bad service"]):
+        return "Customer Service Issues"
     if any(w in t for w in ["open account", "account opening", "registration", "sign up", "signup", "register"]):
         return "Account Opening Issues"
     if any(w in t for w in ["verify", "verification", "kyc", "identity", "document", "proof"]):
@@ -377,12 +379,21 @@ class AppReviewScraper:
             recs.append("Below-average rating – focus on user satisfaction.")
         for cat, count in df["problem_category"].value_counts().head(3).items():
             pct = count / len(df)
-            if cat == "App Operating Issues" and pct > 0.2:
+            if cat == "Customer Service Issues" and pct > 0.15:
+                recs.append("Customer service complaints – improve support responsiveness and training.")
+            elif cat == "App Operating Issues" and pct > 0.2:
                 recs.append("Frequent app issues – consider performance optimisation.")
             elif cat == "Account Verification Issues" and pct > 0.15:
                 recs.append("Verification issues reported – review KYC process.")
             elif cat == "Account Opening Issues" and pct > 0.15:
                 recs.append("Account opening friction – streamline registration.")
+
+        # Customer-related metrics
+        customer_issues = df[df["problem_category"] == "Customer Service Issues"]
+        customer_negative_pct = (
+            (customer_issues["overall_sentiment"] == "negative").mean()
+            if len(customer_issues) > 0 else 0.0
+        )
 
         return {
             "app_key": app_key,
@@ -394,6 +405,11 @@ class AppReviewScraper:
             "rating_distribution": df["rating"].value_counts().sort_index().to_dict(),
             "problem_categories": df["problem_category"].value_counts().to_dict(),
             "platform_distribution": df["platform"].value_counts().to_dict() if "platform" in df.columns else {},
+            "customer_analysis": {
+                "customer_service_reviews_count": len(customer_issues),
+                "customer_service_reviews_pct": round(100 * len(customer_issues) / len(df), 2),
+                "customer_service_negative_pct": round(100 * customer_negative_pct, 2),
+            },
             "recommendations": recs[:5],
         }
 
